@@ -50,6 +50,7 @@ const APP_URL = process.env.APP_URL || `http://localhost:${PORT}`;
 const JWT_SECRET = process.env.JWT_SECRET || 'kwasia-bet-pro-jwt-secret-key-2026';
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'sk_test_placeholder';
 const DEV_PIN = process.env.DEV_PIN || '1234';
+const ODDS_API_KEY = process.env.ODDS_API_KEY || '74445bba3a1a085d05ce01d02d11e59c';
 
 if (!process.env.JWT_SECRET || !process.env.PAYSTACK_SECRET_KEY) {
   console.warn('[WARN] JWT_SECRET or PAYSTACK_SECRET_KEY not set in .env. Using fallback keys.');
@@ -326,11 +327,107 @@ function buildFixtures(key, uid) {
   return out;
 }
 
+// Map league keys to The Odds API sport keys
+const SPORT_KEYS = {
+  epl: 'soccer_epl',
+  laliga: 'soccer_spain_la_liga',
+  saudi: 'soccer_saudi_arabia_pro_league',
+  ucl: 'soccer_uefa_champs_league'
+};
+
+const cachedOdds = {};
+const cacheExpiry = {};
+
+async function fetchRealOdds(key, uid) {
+  const sportKey = SPORT_KEYS[key];
+  if (!sportKey || !ODDS_API_KEY) return null;
+
+  const now = Date.now();
+  if (cachedOdds[key] && cacheExpiry[key] && now < cacheExpiry[key]) {
+    // Re-register cached fixtures into active memory for bets
+    cachedOdds[key].forEach(f => {
+      fixtures.set(f.id, {
+        uid,
+        league: key,
+        home: f.home,
+        away: f.away,
+        odds: f.odds,
+        p: f.p,
+        commence_time: f.commence_time,
+        exp: Date.now() + 15 * 60e3
+      });
+    });
+    return cachedOdds[key];
+  }
+
+  try {
+    const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    const list = data.slice(0, 8).map(match => {
+      const bookmaker = match.bookmakers && match.bookmakers[0];
+      const market = bookmaker && bookmaker.markets && bookmaker.markets.find(m => m.key === 'h2h');
+      const outcomes = (market && market.outcomes) || [];
+
+      const hOdds = outcomes.find(o => o.name === match.home_team)?.price || 2.10;
+      const aOdds = outcomes.find(o => o.name === match.away_team)?.price || 3.20;
+      const dOdds = outcomes.find(o => o.name === 'Draw')?.price || 3.10;
+
+      const odds = { home: r2(hOdds), draw: r2(dOdds), away: r2(aOdds) };
+      // Probability estimation for server resolution
+      const invH = 1 / odds.home, invD = 1 / odds.draw, invA = 1 / odds.away;
+      const totalInv = invH + invD + invA;
+      const p = { home: invH / totalInv, draw: invD / totalInv, away: invA / totalInv };
+
+      const id = match.id || crypto.randomUUID();
+      fixtures.set(id, {
+        uid,
+        league: key,
+        home: match.home_team,
+        away: match.away_team,
+        odds,
+        p,
+        commence_time: match.commence_time,
+        exp: Date.now() + 15 * 60e3
+      });
+
+      return {
+        id,
+        home: match.home_team,
+        away: match.away_team,
+        odds,
+        p,
+        commence_time: match.commence_time
+      };
+    });
+
+    cachedOdds[key] = list;
+    cacheExpiry[key] = now + 10 * 60 * 1000; // cache for 10 minutes to preserve API quota
+    return list;
+  } catch (err) {
+    console.warn(`[WARN] Failed to fetch real odds for ${key}:`, err.message);
+    return null;
+  }
+}
+
 app.get('/api/leagues', (req, res) => res.json({ success: true, leagues: LEAGUES }));
 
-app.get('/api/fixtures/:league', optionalAuth, (req, res) => {
-  if (!LEAGUES[req.params.league]) return fail(res, 404, 'Unknown league.');
-  res.json({ success: true, fixtures: buildFixtures(req.params.league, req.user ? req.user.id : 0) });
+app.get('/api/fixtures/:league', optionalAuth, async (req, res) => {
+  const leagueKey = req.params.league;
+  if (!LEAGUES[leagueKey]) return fail(res, 404, 'Unknown league.');
+  const uid = req.user ? req.user.id : 0;
+
+  // Attempt to fetch real live odds from The Odds API
+  const realFixtures = await fetchRealOdds(leagueKey, uid);
+  if (realFixtures && realFixtures.length > 0) {
+    return res.json({ success: true, live: true, fixtures: realFixtures });
+  }
+
+  // Graceful fallback to simulation engine (e.g. for GPL or when API quota is exhausted)
+  res.json({ success: true, live: false, fixtures: buildFixtures(leagueKey, uid) });
 });
 const checkStake = v => { const s = r2(+v); return s >= 1 && s <= MAX_STAKE ? s : 0; };
 

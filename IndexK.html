@@ -14,7 +14,36 @@
             --glass-bg: rgba(26, 26, 32, 0.65);
             --card-bg-static: rgba(30, 30, 38, 0.65);
             
-            /* Pure Clean Elevated Shadows */
+            
+        .team-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .team-logo-img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px;
+            flex-shrink: 0;
+        }
+        .live-tag-badge {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--brand-green);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Pure Clean Elevated Shadows */
             --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
             --hover-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
             
@@ -697,7 +726,7 @@
                         
                         <div id="slip-active-content" style="display: none;">
                             <div class="slip-selection">
-                                <div class="slip-team" id="slip-selection-team">--</div>
+                                <div class="slip-team" id="slip-selection-team" style="display:flex; align-items:center; gap:8px;">--</div>
                                 <div class="slip-match" id="slip-selection-match">--</div>
                                 <div class="slip-odds" id="slip-selection-odds">0.00</div>
                             </div>
@@ -1255,7 +1284,115 @@
             }
         }
 
+        
+        // Fast CDN Logos for major clubs (fallback to stylized shield avatar)
+        const TEAM_LOGOS = {
+            // Premier League (EPL)
+            "Man City": "https://crests.football-data.org/65.png",
+            "Manchester City": "https://crests.football-data.org/65.png",
+            "Arsenal": "https://crests.football-data.org/57.png",
+            "Liverpool": "https://crests.football-data.org/64.png",
+            "Chelsea": "https://crests.football-data.org/61.png",
+            "Spurs": "https://crests.football-data.org/73.png",
+            "Tottenham": "https://crests.football-data.org/73.png",
+            "Tottenham Hotspur": "https://crests.football-data.org/73.png",
+            "Man Utd": "https://crests.football-data.org/66.png",
+            "Manchester United": "https://crests.football-data.org/66.png",
+            "Newcastle": "https://crests.football-data.org/67.png",
+            "Newcastle United": "https://crests.football-data.org/67.png",
+            "Aston Villa": "https://crests.football-data.org/58.png",
+            "Brighton": "https://crests.football-data.org/397.png",
+            "Brighton and Hove Albion": "https://crests.football-data.org/397.png",
+            "West Ham": "https://crests.football-data.org/563.png",
+            "West Ham United": "https://crests.football-data.org/563.png",
+            "Crystal Palace": "https://crests.football-data.org/354.png",
+            "Bournemouth": "https://crests.football-data.org/1044.png",
+            "Fulham": "https://crests.football-data.org/63.png",
+            "Brentford": "https://crests.football-data.org/402.png",
+            "Everton": "https://crests.football-data.org/62.png",
+            "Wolves": "https://crests.football-data.org/76.png",
+            "Wolverhampton Wanderers": "https://crests.football-data.org/76.png",
+            "Nottm Forest": "https://crests.football-data.org/351.png",
+            "Nottingham Forest": "https://crests.football-data.org/351.png",
+            "Leicester": "https://crests.football-data.org/338.png",
+            "Leicester City": "https://crests.football-data.org/338.png",
+            "Southampton": "https://crests.football-data.org/340.png",
+            "Ipswich": "https://crests.football-data.org/349.png",
+            "Ipswich Town": "https://crests.football-data.org/349.png",
+
+            // La Liga
+            "Real Madrid": "https://crests.football-data.org/86.png",
+            "Barcelona": "https://crests.football-data.org/81.png",
+            "Atletico Madrid": "https://crests.football-data.org/78.png",
+            "Athletic Bilbao": "https://crests.football-data.org/77.png",
+            "Real Sociedad": "https://crests.football-data.org/92.png",
+            "Girona": "https://crests.football-data.org/298.png",
+            "Villarreal": "https://crests.football-data.org/94.png",
+            "Real Betis": "https://crests.football-data.org/90.png",
+            "Betis": "https://crests.football-data.org/90.png",
+            "Sevilla": "https://crests.football-data.org/559.png",
+            "Valencia": "https://crests.football-data.org/95.png",
+            "Osasuna": "https://crests.football-data.org/79.png",
+            "Getafe": "https://crests.football-data.org/82.png",
+            "Celta Vigo": "https://crests.football-data.org/558.png",
+            "Rayo Vallecano": "https://crests.football-data.org/87.png",
+            "Mallorca": "https://crests.football-data.org/89.png",
+            "Las Palmas": "https://crests.football-data.org/275.png",
+            "Espanyol": "https://crests.football-data.org/80.png",
+            "Alaves": "https://crests.football-data.org/263.png",
+            "Leganes": "https://crests.football-data.org/745.png",
+            "Valladolid": "https://crests.football-data.org/250.png",
+
+            // UEFA Champions League & Europe
+            "Bayern Munich": "https://crests.football-data.org/5.png",
+            "Paris Saint-Germain": "https://crests.football-data.org/524.png",
+            "PSG": "https://crests.football-data.org/524.png",
+            "Inter Milan": "https://crests.football-data.org/108.png",
+            "Bayer Leverkusen": "https://crests.football-data.org/4.png",
+            "Borussia Dortmund": "https://crests.football-data.org/7.png",
+            "Juventus": "https://crests.football-data.org/109.png",
+            "AC Milan": "https://crests.football-data.org/98.png",
+            "Atalanta": "https://crests.football-data.org/102.png",
+            "Benfica": "https://crests.football-data.org/1903.png",
+            "Sporting CP": "https://crests.football-data.org/498.png",
+            "RB Leipzig": "https://crests.football-data.org/721.png",
+            "Monaco": "https://crests.football-data.org/548.png",
+
+            // Saudi Pro League
+            "Al Hilal": "https://upload.wikimedia.org/wikipedia/en/thumb/f/f6/Al_Hilal_SFC_logo.svg/200px-Al_Hilal_SFC_logo.svg.png",
+            "Al Nassr": "https://upload.wikimedia.org/wikipedia/en/thumb/c/c5/Al-Nassr_FC_Logo.svg/200px-Al-Nassr_FC_Logo.svg.png",
+            "Al Ahli": "https://upload.wikimedia.org/wikipedia/en/thumb/1/15/Al-Ahli_Saudi_FC_logo.svg/200px-Al-Ahli_Saudi_FC_logo.svg.png",
+            "Al Ittihad": "https://upload.wikimedia.org/wikipedia/en/thumb/9/90/Al-Ittihad_Club_logo.svg/200px-Al-Ittihad_Club_logo.svg.png",
+            "Al Shabab": "https://upload.wikimedia.org/wikipedia/en/thumb/9/91/Al-Shabab_FC_%28Riyadh%29_logo.svg/200px-Al-Shabab_FC_%28Riyadh%29_logo.svg.png",
+            "Al Ettifaq": "https://upload.wikimedia.org/wikipedia/en/thumb/c/c1/Ettifaq_FC_logo.svg/200px-Ettifaq_FC_logo.svg.png",
+            "Al Taawoun": "https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Al-Taawoun_FC_logo.svg/200px-Al-Taawoun_FC_logo.svg.png",
+            "Al Fateh": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Al-Fateh_SC_logo.svg/200px-Al-Fateh_SC_logo.svg.png",
+
+            // Ghana Premier League (GPL)
+            "Asante Kotoko": "https://upload.wikimedia.org/wikipedia/en/thumb/2/26/Asante_Kotoko_SC_logo.svg/200px-Asante_Kotoko_SC_logo.svg.png",
+            "Hearts of Oak": "https://upload.wikimedia.org/wikipedia/en/thumb/0/07/Accra_Hearts_of_Oak_SC_logo.svg/200px-Accra_Hearts_of_Oak_SC_logo.svg.png",
+            "Medeama SC": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Medeama_SC_logo.svg/200px-Medeama_SC_logo.svg.png",
+            "Aduana Stars": "https://upload.wikimedia.org/wikipedia/en/thumb/e/ee/Aduana_Stars_F.C._logo.png/200px-Aduana_Stars_F.C._logo.png",
+            "Dreams FC": "https://upload.wikimedia.org/wikipedia/en/thumb/b/b8/Dreams_FC_Ghana_logo.png/200px-Dreams_FC_Ghana_logo.png",
+            "Accra Lions": "https://upload.wikimedia.org/wikipedia/en/thumb/7/75/Accra_Lions_FC_logo.png/200px-Accra_Lions_FC_logo.png",
+            "Berekum Chelsea": "https://upload.wikimedia.org/wikipedia/en/thumb/9/95/Berekum_Chelsea_F.C._logo.png/200px-Berekum_Chelsea_F.C._logo.png",
+            "Legon Cities": "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Legon_Cities_FC_logo.png/200px-Legon_Cities_FC_logo.png"
+
+        };
+
+        function getTeamLogo(name) {
+            if (TEAM_LOGOS[name]) return TEAM_LOGOS[name];
+            for (const [k, url] of Object.entries(TEAM_LOGOS)) {
+                if (name && (name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase()))) {
+                    return url;
+                }
+            }
+            const initial = (name || 'T').slice(0, 2).toUpperCase();
+            return 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="%2322222a"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="%23ff3b30" font-family="sans-serif" font-weight="800" font-size="14">' + initial + '</text></svg>';
+        }
+
         function renderFixtures() {
+
             const board = document.getElementById('fixtures-board'); 
             if (!board) return;
             board.innerHTML = '';
@@ -1275,12 +1412,18 @@
                     <div class="fixture-card hover-lift">
                         <div class="fixture-meta">
                             <span>Matchday ${state.season.matchday}</span>
-                            <span style="color: var(--brand-red);">Live Market</span>
+                            ${fix.commence_time ? '<span class="live-tag-badge">🔴 REAL ODDS API</span>' : '<span style="color: var(--brand-red);">Live Market</span>'}
                         </div>
                         <div class="fixture-teams">
-                            <span>${fix.home}</span>
-                            <span style="color: var(--brand-red); font-size: 13px;">VS</span>
-                            <span>${fix.away}</span>
+                            <div class="team-box">
+                                <img src="${getTeamLogo(fix.home)}" alt="${fix.home}" class="team-logo-img" onerror="this.src=getTeamLogo('')" />
+                                <span>${fix.home}</span>
+                            </div>
+                            <span style="color: var(--brand-red); font-size: 12px; font-weight:800; background:rgba(255,255,255,0.06); padding:4px 8px; border-radius:6px;">VS</span>
+                            <div class="team-box" style="justify-content: flex-end;">
+                                <span>${fix.away}</span>
+                                <img src="${getTeamLogo(fix.away)}" alt="${fix.away}" class="team-logo-img" onerror="this.src=getTeamLogo('')" />
+                            </div>
                         </div>
                         <div class="odds-row">
                             <div class="odds-cell ${isH ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'home', ${fix.odds.home})">
@@ -1335,7 +1478,8 @@
             activeContent.style.display = 'block'; 
             slipCount.innerText = '1';
 
-            document.getElementById('slip-selection-team').innerText = `${state.activeSelection.teamName}`;
+            const slipTeamEl = document.getElementById('slip-selection-team');
+            slipTeamEl.innerHTML = `<img src="${getTeamLogo(state.activeSelection.teamName)}" style="width:20px; height:20px; object-fit:contain; border-radius:4px;" onerror="this.style.display='none'"> <span>${state.activeSelection.teamName}</span>`;
             document.getElementById('slip-selection-match').innerText = state.activeSelection.matchName;
             document.getElementById('slip-selection-odds').innerText = state.activeSelection.oddsVal.toFixed(2);
             updateSlipPayout();
@@ -1470,7 +1614,10 @@
                     tbody.innerHTML += `
                         <tr>
                             <td class="${posCls}">${idx + 1}</td>
-                            <td><strong>${team}</strong></td>
+                            <td style="display:flex; align-items:center; gap:8px;">
+                            <img src="${getTeamLogo(team)}" alt="${team}" style="width:18px; height:18px; object-fit:contain; border-radius:3px; flex-shrink:0;" onerror="this.style.display='none'" />
+                            <strong>${team}</strong>
+                        </td>
                             <td>${d.p}</td>
                             <td>${d.gd > 0 ? '+' + d.gd : d.gd}</td>
                             <td><strong>${d.pts}</strong></td>
