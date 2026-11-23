@@ -2341,8 +2341,7 @@ const sfx = new SoundFX();
 
             const existing = hasUserBetOnMatch(fixture);
             if (existing) {
-                alert("You have already placed a bet on " + fixture.home + " vs " + fixture.away + "!
-Only 1 bet per match is allowed.");
+                alert("You have already placed a bet on " + fixture.home + " vs " + fixture.away + "!\nOnly 1 bet per match is allowed.");
                 return;
             }
 
@@ -3536,11 +3535,11 @@ Only 1 bet per match is allowed.");
     <!-- Mobile Bottom Navigation & Slip Sheet Backdrop -->
     <div class="mobile-slip-backdrop" id="mobile-slip-backdrop" onclick="toggleMobileSlip(false)"></div>
     <nav class="mobile-bottom-nav">
-        <a class="mobile-nav-item active" id="mob-sports" onclick="switchMobileTab(sports)">
+        <a class="mobile-nav-item active" id="mob-sports" onclick="switchMobileTab('sports')">
             <span class="mobile-nav-icon">⚽</span>
             <span>Sports</span>
         </a>
-        <a class="mobile-nav-item" id="mob-casino" onclick="switchMobileTab(casino)">
+        <a class="mobile-nav-item" id="mob-casino" onclick="switchMobileTab('casino')">
             <span class="mobile-nav-icon">🎰</span>
             <span>Casino</span>
         </a>
@@ -3549,11 +3548,11 @@ Only 1 bet per match is allowed.");
             <span style="font-weight:700;">Slip</span>
             <span class="mobile-slip-badge" id="mob-slip-count">0</span>
         </a>
-        <a class="mobile-nav-item" id="mob-balance" onclick="switchMobileTab(balance)">
+        <a class="mobile-nav-item" id="mob-balance" onclick="switchMobileTab('balance')">
             <span class="mobile-nav-icon">💳</span>
             <span>History</span>
         </a>
-        <a class="mobile-nav-item" id="mob-profile" onclick="switchMobileTab(profile)">
+        <a class="mobile-nav-item" id="mob-profile" onclick="switchMobileTab('profile')">
             <span class="mobile-nav-icon">👤</span>
             <span>Profile</span>
         </a>
