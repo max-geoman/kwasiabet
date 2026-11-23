@@ -531,4 +531,4 @@ app.get('/api/history', auth, (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`KwasiaBet Server running on ${APP_URL}${devOn() ? '  [DEV MODE ON]' : ''}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`KwasiaBet Server running on ${APP_URL} (port ${PORT})${devOn() ? '  [DEV MODE ON]' : ''}`));

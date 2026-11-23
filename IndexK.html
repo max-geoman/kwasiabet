@@ -1186,10 +1186,10 @@
         };
 
         // Automatically detect backend URL:
-        // If not running on port 3001 (e.g. VS Code Live Server on 5500/5501 or file://), connect to localhost:3001
-        const API_BASE = (window.location.port === '3001')
-            ? ''
-            : `${window.location.protocol.startsWith('http') ? window.location.protocol : 'http:'}//${window.location.hostname || 'localhost'}:3001`;
+        // When deployed on the web (Railway, Render, etc.), standard web traffic is on port 80/443 (port is empty "").
+        // Only if running specifically on a local dev server like Live Server (5500, 5501, 3000), redirect to localhost:3001.
+        const isLocalDevServer = ['5500', '5501', '3000', '8080'].includes(window.location.port) || window.location.protocol === 'file:';
+        const API_BASE = isLocalDevServer ? 'http://localhost:3001' : '';
         const apiUrl = (path) => `${API_BASE}${path}`;
         let currentLeagueKey = "epl";
         let currentAuthMode = 'login';
