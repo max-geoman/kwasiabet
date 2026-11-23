@@ -1781,7 +1781,10 @@
                 return alert("Deposit must be between GH₵ 1 and GH₵ 5,000.");
             }
 
-            const payload = { amount };
+            const payload = { 
+                amount,
+                callback_url: window.location.origin + '/'
+            };
             if (method === 'momo') {
                 if (!phone) return alert("Enter your Ghana mobile number (e.g. 024XXXXXXX).");
                 payload.phone = phone;
@@ -2359,7 +2362,7 @@
         // ---------- App Initialization ----------
         async function initApp() {
             const urlParams = new URLSearchParams(window.location.search);
-            const reference = urlParams.get('reference');
+            const reference = urlParams.get('reference') || urlParams.get('trxref');
 
             if (state.token) {
                 try {

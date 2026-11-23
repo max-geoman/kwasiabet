@@ -429,8 +429,15 @@ const initPaymentHandler = async (req, res) => {
       if (!j.status) return fail(res, 400, j.message || 'Could not start mobile money payment.');
       return res.json({ success: true, mode: 'momo', reference, status: j.data.status, message: j.data.display_text || 'Approve the payment prompt on your phone.' });
     }
+    // Determine callback URL dynamically:
+    // 1. Client-provided callback_url (matches current browser domain on Railway/Render/localhost)
+    // 2. Request Origin / Referer / Host headers
+    // 3. Fallback to configured APP_URL
+    const reqOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : null) || (req.headers.host ? `${req.protocol || 'https'}://${req.headers.host}` : null);
+    const callbackUrl = req.body.callback_url || (reqOrigin ? `${reqOrigin}/` : `${APP_URL}/`);
+
     const j = await ps('/transaction/initialize', 'POST', { email: req.user.email, amount: Math.round(amount * 100), currency: 'GHS', reference,
-      callback_url: `${APP_URL}/`, channels: ['mobile_money', 'card'] });
+      callback_url: callbackUrl, channels: ['mobile_money', 'card'] });
     if (!j.status) return fail(res, 400, j.message || 'Payment init failed.');
     res.json({ success: true, mode: 'checkout', reference, authorization_url: j.data.authorization_url });
   } catch { fail(res, 502, 'Payment gateway error.'); }
