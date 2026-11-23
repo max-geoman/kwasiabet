@@ -1,0 +1,14 @@
+node_modules/
+.env
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+
+
+git init
+git add .
+git commit -m "Initial commit of KwasiaBet"
+git branch -M main
+git remote add origin https://github.com/max-geoman/kwasiabet.git
+git push -u origin main

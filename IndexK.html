@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KwasiaBet Pro - Clean Dark Floating Multi-User Edition</title>
+    <style>
+        :root {
+            --brand-red: #ff3b30;
+            --brand-red-saturated: #d70015;
+            --brand-green: #30d158;
+            
+            /* Pure Dark Surface Colors */
+            --glass-bg: rgba(26, 26, 32, 0.65);
+            --card-bg-static: rgba(30, 30, 38, 0.65);
+            
+            /* Pure Clean Elevated Shadows */
+            --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+            --hover-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+            
+            --text-main: #ffffff;
+            --text-sub: rgba(235, 235, 245, 0.6);
+            
+            --radius-xl: 22px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --ease-float: cubic-bezier(0.25, 1, 0.3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; border: none; outline: none; }
+        
+        body { 
+            background-color: #030305; 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px; 
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Ambient Mesh Backdrop */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            background: #030305;
+            pointer-events: none;
+        }
+
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(110px);
+            opacity: 0.25;
+            will-change: transform;
+        }
+
+        .orb-1 {
+            top: -15%;
+            left: -10%;
+            width: 55vw;
+            height: 55vw;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.6) 0%, transparent 70%);
+            animation: moveOrb1 22s ease-in-out infinite alternate;
+        }
+
+        .orb-2 {
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(160, 20, 20, 0.5) 0%, transparent 70%);
+            animation: moveOrb2 26s ease-in-out infinite alternate;
+        }
+
+        .orb-3 {
+            top: 40%;
+            left: 35%;
+            width: 35vw;
+            height: 35vw;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.25) 0%, transparent 70%);
+            animation: moveOrb3 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes moveOrb1 {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(12vw, 15vh, 0) scale(1.15); }
+            100% { transform: translate3d(-5vw, 25vh, 0) scale(0.9); }
+        }
+
+        @keyframes moveOrb2 {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            50% { transform: translate3d(-15vw, -18vh, 0) scale(1.1); }
+            100% { transform: translate3d(8vw, -10vh, 0) scale(0.95); }
+        }
+
+        @keyframes moveOrb3 {
+            0% { transform: translate3d(0, 0, 0) scale(0.9); }
+            50% { transform: translate3d(-10vw, 12vh, 0) scale(1.2); }
+            100% { transform: translate3d(15vw, -15vh, 0) scale(1); }
+        }
+
+        header { 
+            background: rgba(10, 10, 14, 0.85); 
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .top-bar { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; }
+        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; transition: transform 0.3s var(--ease-float); }
+        .logo-container:hover { transform: translateY(-2px) scale(1.02); }
+        .logo-box { background: var(--brand-red); color: #fff; font-weight: 800; font-size: 1.1rem; padding: 6px 12px; border-radius: var(--radius-md); font-style: italic; }
+        .logo-text { font-size: 1.5rem; font-weight: 800; }
+        .logo-text span { color: var(--brand-red); }
+
+        .auth-bar { display: flex; align-items: center; gap: 12px; }
+        .auth-btn { background: rgba(255,255,255,0.08); color: #fff; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.2s; }
+        .auth-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
+        .auth-btn.primary { background: var(--brand-red); }
+        .auth-btn.primary:hover { background: var(--brand-red-saturated); }
+        .auth-btn.dev-btn { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255, 204, 0, 0.3); }
+        .auth-btn.dev-btn:hover { background: rgba(255, 204, 0, 0.25); }
+        .user-email-tag { font-size: 13px; font-weight: 700; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }
+        .dev-badge { background: #ffcc00; color: #000; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
+
+        .nav-links-inner { max-width: 1400px; margin: 0 auto; display: flex; gap: 24px; padding: 0 24px; }
+        .nav-link { color: var(--text-sub); text-decoration: none; padding: 12px 0; font-weight: 600; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s var(--ease-float); }
+        .nav-link.active, .nav-link:hover { color: #fff; border-bottom-color: var(--brand-red); }
+
+        /* Smooth Floating Animation Class */
+        .hover-lift {
+            transition: transform 0.35s var(--ease-float), box-shadow 0.35s var(--ease-float);
+            will-change: transform;
+        }
+        .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .card { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-xl); 
+            margin-bottom: 24px; 
+            overflow: hidden; 
+            box-shadow: var(--glass-shadow); 
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .card-header { padding: 20px 24px; font-weight: 700; font-size: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        /* UNIFIED WALLET CARD */
+        .wallet-card { 
+            background: rgba(26, 26, 32, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 20px; 
+            text-align: center; 
+            border-radius: var(--radius-xl); 
+            margin-bottom: 24px; 
+            box-shadow: var(--glass-shadow);
+            position: relative; 
+            z-index: 10;
+        }
+        .wallet-header-text { color: var(--text-sub); font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+        .wallet-amount { font-size: 2.6rem; font-weight: 800; color: #fff; margin-bottom: 6px; text-shadow: 0 4px 16px rgba(0,0,0,0.5); }
+        
+        /* PROFIT / LOSS TRACKER BADGE */
+        .pl-tracker {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pl-tracker.profit { color: var(--brand-green); background: rgba(48, 209, 88, 0.12); border-color: rgba(48, 209, 88, 0.3); }
+        .pl-tracker.loss { color: var(--brand-red); background: rgba(255, 59, 48, 0.12); border-color: rgba(255, 59, 48, 0.3); }
+
+        .wallet-btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .action-btn-massive { 
+            width: 100%; 
+            background: var(--brand-red); 
+            color: #fff; 
+            padding: 14px; 
+            font-weight: 800; 
+            font-size: 14px; 
+            border-radius: var(--radius-lg); 
+            cursor: pointer; 
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float);
+        }
+        .action-btn-massive:hover {
+            background-color: var(--brand-red-saturated);
+            transform: translateY(-2px);
+        }
+        .btn-withdraw {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 14px;
+            font-weight: 800;
+            font-size: 14px;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: transform 0.25s var(--ease-float), background-color 0.25s;
+        }
+        .btn-withdraw:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* Unified Layouts */
+        .layout-grid { 
+            max-width: 1400px; 
+            margin: 30px auto; 
+            padding: 0 24px; 
+            display: grid; 
+            grid-template-columns: 310px 1fr 340px; 
+            gap: 24px; 
+            position: relative; 
+            z-index: 10; 
+        }
+        .layout-grid.two-col {
+            grid-template-columns: 1fr 340px;
+        }
+        
+        .table-scroll-container { max-height: 500px; overflow-y: auto; }
+        table.standings-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        table.standings-table th { color: var(--text-sub); text-align: left; padding: 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; position: sticky; top: 0; background: rgba(14, 14, 18, 0.95); z-index: 2; }
+        table.standings-table td { padding: 10px 12px; font-weight: 500; }
+        table.standings-table tr { transition: background 0.2s; }
+        table.standings-table tbody tr:hover { background: rgba(255,255,255,0.06); }
+        
+        .pos-top { color: var(--brand-red); font-weight: 800; }
+        .pos-bot { color: rgba(255, 255, 255, 0.4); font-weight: 800; }
+
+        .league-selector-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding: 4px 2px; }
+        .league-chip {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-sub); padding: 11px 20px; border-radius: 30px; font-weight: 700; font-size: 13px;
+            cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float), color 0.25s;
+        }
+        .league-chip:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+        .league-chip.active { background: var(--brand-red); color: #fff; border-color: transparent; }
+
+        .league-banner { 
+            background: rgba(255, 255, 255, 0.04); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-xl); 
+            padding: 20px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        }
+        .league-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+
+        .fixture-card { 
+            background: rgba(30, 30, 38, 0.65); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-xl); padding: 20px; margin-bottom: 16px; box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        }
+        .fixture-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sub); margin-bottom: 16px; font-weight: 600; }
+        .fixture-teams { font-size: 17px; font-weight: 800; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+        .odds-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .odds-cell { 
+            background: rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 14px; text-align: center; cursor: pointer;
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float);
+        }
+        .odds-cell:hover:not(.selected) {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.18);
+        }
+        .odds-cell.selected { 
+            background: var(--brand-red-saturated) !important; 
+            transform: translateY(-2px);
+        }
+        .odds-label { font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 4px; font-weight: 700; }
+        .odds-cell.selected .odds-label { color: rgba(255, 255, 255, 0.9); }
+        .odds-val { font-size: 16px; font-weight: 800; color: #fff; }
+
+        .slip-box { padding: 20px; }
+        .slip-selection { background: rgba(255,255,255,0.06); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px; position: relative; }
+        .slip-team { font-weight: 800; font-size: 15px; margin-bottom: 4px; color: var(--brand-red); }
+        .slip-match { font-size: 12px; color: var(--text-sub); }
+        .slip-odds { position: absolute; right: 16px; top: 16px; font-weight: 800; font-size: 16px; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; }
+
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-sub); margin-bottom: 8px; font-weight: 600; }
+        .input-group input, .input-group select { 
+            width: 100%; background: rgba(255,255,255,0.08); color: #fff; padding: 14px 16px; border-radius: var(--radius-md); font-weight: 800; font-size: 15px; transition: background 0.2s;
+        }
+        .input-group select { font-weight: 600; font-size: 14px; }
+        .input-group select option { background: #1a1a20; color: #fff; }
+        .input-group input:focus, .input-group select:focus { background: rgba(255,255,255,0.15); }
+
+        .quick-stakes { display: flex; gap: 8px; margin-bottom: 20px; }
+        .quick-stake-btn { 
+            flex: 1; background: rgba(255,255,255,0.08); color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float);
+        }
+        .quick-stake-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.18);
+        }
+
+        .payout-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; color: var(--text-sub); }
+        .payout-row.total { font-size: 18px; font-weight: 800; color: #fff; margin-top: 16px; padding-top: 16px; background: rgba(255,255,255,0.02); }
+        .payout-row.total span:last-child { color: var(--brand-red); }
+
+        .place-btn { 
+            width: 100%; background: var(--brand-red); color: #fff; padding: 16px; font-weight: 800; font-size: 16px; border-radius: var(--radius-lg); cursor: pointer; 
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float);
+        }
+        .place-btn:hover {
+            background-color: var(--brand-red-saturated);
+            transform: translateY(-3px);
+        }
+        .place-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .history-feed { max-height: 280px; overflow-y: auto; padding: 0 20px 20px 20px; }
+        .history-card { background: rgba(255,255,255,0.06); border-radius: var(--radius-md); padding: 14px; margin-top: 12px; font-size: 13px; }
+        .history-card.win { border-left: 4px solid var(--brand-green); }
+        .history-card.loss { border-left: 4px solid rgba(255,255,255,0.2); }
+
+        /* CASINO VIEW */
+        .games-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+        .crash-container { background: rgba(20,20,26,0.5); border-radius: var(--radius-xl); padding: 50px 20px; text-align: center; }
+        .multiplier-display { font-size: 5rem; font-weight: 800; color: var(--brand-red); }
+        .multiplier-display.crashed { color: rgba(255,255,255,0.3); }
+        .crash-controls { margin-top: 30px; display: flex; gap: 16px; justify-content: center; align-items: center; }
+
+        .bet-input { background: rgba(255,255,255,0.08); color: #fff; padding: 16px; border-radius: var(--radius-md); font-size: 18px; font-weight: 800; width: 140px; text-align: center; }
+        .action-btn { 
+            background: var(--brand-red); color: #fff; padding: 16px 36px; font-size: 18px; font-weight: 800; border-radius: var(--radius-md); cursor: pointer; 
+            transition: transform 0.25s var(--ease-float), background-color 0.25s var(--ease-float);
+        }
+        .action-btn:hover { transform: translateY(-3px); background-color: var(--brand-red-saturated); }
+        .action-btn.cashout { background: #fff; color: #000; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .slots-container { background: rgba(20,20,26,0.5); border-radius: var(--radius-xl); padding: 40px 20px; text-align: center; }
+        .slots-display { display: flex; justify-content: center; gap: 16px; margin-bottom: 30px; }
+        .slot-reel { background: rgba(0,0,0,0.5); width: 100px; height: 100px; border-radius: var(--radius-lg); display: flex; justify-content: center; align-items: center; font-size: 3.5rem; }
+
+        /* Modal Overlay */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: rgba(26, 26, 32, 0.95); width: 400px; max-width: 90vw; padding: 30px; border-radius: var(--radius-xl); box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); }
+    
+        /* Light Theme Overrides */
+        body.light-theme {
+            --glass-bg: rgba(255, 255, 255, 0.88);
+            --card-bg-static: rgba(245, 245, 248, 0.95);
+            --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+            --text-main: #111116;
+            --text-sub: rgba(60, 60, 70, 0.75);
+            background-color: #f4f4f7;
+            color: #111116;
+        }
+        body.light-theme header {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        body.light-theme .ambient-bg {
+            background: #f0f1f6;
+        }
+        body.light-theme .card,
+        body.light-theme .wallet-card,
+        body.light-theme .fixture-card,
+        body.light-theme .league-banner,
+        body.light-theme .crash-container,
+        body.light-theme .slots-container,
+        body.light-theme .modal-box {
+            background: rgba(255, 255, 255, 0.94);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #111116;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+        body.light-theme .card-header {
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom-color: rgba(0, 0, 0, 0.06);
+            color: #111116;
+        }
+        body.light-theme .odds-cell,
+        body.light-theme .league-chip,
+        body.light-theme .auth-btn,
+        body.light-theme .quick-stake-btn,
+        body.light-theme .slip-selection,
+        body.light-theme .history-card,
+        body.light-theme .stat-card,
+        body.light-theme .input-group input,
+        body.light-theme .input-group select,
+        body.light-theme .bet-input {
+            background: rgba(0, 0, 0, 0.05);
+            color: #111116;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        body.light-theme .input-group select option {
+            background: #ffffff;
+            color: #111116;
+        }
+        body.light-theme .table-scroll-container th {
+            background: rgba(245, 245, 248, 0.95);
+            color: rgba(60, 60, 70, 0.7);
+        }
+        body.light-theme .table-scroll-container td {
+            color: #111116;
+            border-bottom-color: rgba(0, 0, 0, 0.05);
+        }
+        body.light-theme .wallet-amount,
+        body.light-theme .odds-val,
+        body.light-theme .multiplier-display {
+            color: #111116;
+            text-shadow: none;
+        }
+        body.light-theme .btn-withdraw {
+            background: rgba(0, 0, 0, 0.06);
+            color: #111116;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .btn-withdraw:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        /* Financial Hub & Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stat-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-sub);
+        }
+        .stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .stat-val.positive { color: var(--brand-green); }
+        .stat-val.negative { color: var(--brand-red); }
+
+        /* Filter Tab Bar */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-sub);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--brand-red);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        /* Table inside Balance Page */
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .financial-table th {
+            text-align: left;
+            padding: 12px 14px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .financial-table td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-weight: 500;
+        }
+        .financial-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .badge-pill {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-pill.success, .badge-pill.win { background: rgba(48, 209, 88, 0.15); color: var(--brand-green); }
+        .badge-pill.loss, .badge-pill.failed { background: rgba(255, 59, 48, 0.15); color: var(--brand-red); }
+        .badge-pill.pending { background: rgba(255, 204, 0, 0.15); color: #ffcc00; }
+        .badge-pill.info { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+
+        /* Explanation Box */
+        .payout-explainer {
+            background: rgba(255, 59, 48, 0.06);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .payout-explainer h4 {
+            color: var(--brand-red);
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .payout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+        .payout-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            font-size: 12px;
+        }
+        .payout-item strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-main);
+            font-size: 13px;
+        }
+
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <header>
+        <div class="top-bar">
+            <div class="logo-container" onclick="switchTab('sports')">
+                <div class="logo-box">KB</div>
+                <div class="logo-text">Kwasia<span>Bet</span></div>
+            </div>
+            <div class="auth-bar" id="auth-controls">
+                <button class="auth-btn" onclick="openAuthModal('login')">Log In</button>
+                <button class="auth-btn primary" onclick="openAuthModal('register')">Sign Up</button>
+                <button class="theme-toggle-btn hover-lift" id="theme-btn" onclick="toggleTheme()" title="Toggle Light / Dark mode">☀️ Light</button>
+                <button class="auth-btn dev-btn" onclick="openDevModal()">⚙️ Dev</button>
+            </div>
+        </div>
+        <div class="nav-links-inner">
+            <a class="nav-link active" id="nav-sports" onclick="switchTab('sports')">⚽ Sportsbook</a>
+            <a class="nav-link" id="nav-casino" onclick="switchTab('casino')">🎰 Casino Games</a>
+            <a class="nav-link" id="nav-balance" onclick="switchTab('balance')">💳 Balance & History</a>
+            <a class="nav-link" id="nav-profile" onclick="switchTab('profile')">👤 Profile & Settings</a>
+        </div>
+    </header>
+
+    <!-- SPORTS VIEW -->
+    <div id="view-sports" class="view-section active">
+        <div class="layout-grid">
+            <aside>
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <span id="league-table-title">EPL Table</span>
+                        <span id="matchday-tag" style="color: var(--brand-red); font-size: 12px; font-weight: 800;">MD 1/38</span>
+                    </div>
+                    <div class="table-scroll-container">
+                        <table class="standings-table">
+                            <thead>
+                                <tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr>
+                            </thead>
+                            <tbody id="standings-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </aside>
+
+            <main>
+                <!-- League Selector Chips -->
+                <div class="league-selector-bar">
+                    <button class="league-chip hover-lift active" id="chip-epl" onclick="selectLeague('epl')">🏴󠁧󠁢󠁥󠁮󠁧󠁿 EPL</button>
+                    <button class="league-chip hover-lift" id="chip-gpl" onclick="selectLeague('gpl')">🇬🇭 GPL</button>
+                    <button class="league-chip hover-lift" id="chip-laliga" onclick="selectLeague('laliga')">🇪🇸 La Liga</button>
+                    <button class="league-chip hover-lift" id="chip-saudi" onclick="selectLeague('saudi')">🇸🇦 Saudi League</button>
+                    <button class="league-chip hover-lift" id="chip-ucl" onclick="selectLeague('ucl')">🇪🇺 Champions League</button>
+                </div>
+
+                <div class="league-banner hover-lift">
+                    <div class="league-title" id="active-league-title">⚽ Premier League</div>
+                    <div style="font-size: 13px; color: var(--text-sub); display:flex; gap:10px; align-items:center;">
+                        <span>Server-Verified Odds</span>
+                        <button class="auth-btn" style="padding: 4px 10px; font-size: 11px;" onclick="fetchFixtures(currentLeagueKey)">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <div id="fixtures-board"></div>
+
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <span>Recent Activity</span>
+                        <button class="auth-btn" style="padding: 4px 10px; font-size: 11px;" onclick="fetchHistory()">🔄</button>
+                    </div>
+                    <div class="history-feed" id="history-feed">
+                        <div style="color: var(--text-sub); text-align: center; padding: 30px;">No bets placed yet.</div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR (SHARED WALLET & BETSLIP) -->
+            <aside>
+                <div class="wallet-card hover-lift">
+                    <div class="wallet-header-text">Account Balance</div>
+                    <div class="wallet-amount main-wallet-display">GH₵ 25.00</div>
+                    <div class="pl-tracker" id="pl-badge">P/L: GH₵ 0.00</div>
+                    <div class="wallet-btn-group">
+                        <button class="action-btn-massive hover-lift" onclick="openDepositModal()">Deposit via Paystack</button>
+                        <button class="btn-withdraw hover-lift" onclick="openWithdrawModal()">Cash Out (Withdraw)</button>
+                    </div>
+                </div>
+
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <span>Bet Slip</span>
+                        <span id="slip-count" style="background: var(--brand-red); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px;">0</span>
+                    </div>
+                    <div class="slip-box" id="slip-container">
+                        <div style="color: var(--text-sub); text-align: center; padding: 40px 10px;" id="slip-empty-msg">
+                            Click an odds box to create a bet.
+                        </div>
+                        
+                        <div id="slip-active-content" style="display: none;">
+                            <div class="slip-selection">
+                                <div class="slip-team" id="slip-selection-team">--</div>
+                                <div class="slip-match" id="slip-selection-match">--</div>
+                                <div class="slip-odds" id="slip-selection-odds">0.00</div>
+                            </div>
+
+                            <div class="input-group">
+                                <label>Stake (GH₵)</label>
+                                <input type="number" id="stake-input" value="10" min="1" max="500" oninput="updateSlipPayout()">
+                            </div>
+
+                            <div class="quick-stakes">
+                                <button class="quick-stake-btn hover-lift" onclick="addStake(10)">+10</button>
+                                <button class="quick-stake-btn hover-lift" onclick="addStake(50)">+50</button>
+                                <button class="quick-stake-btn hover-lift" onclick="addStake(100)">+100</button>
+                            </div>
+
+                            <div class="payout-summary">
+                                <div class="payout-row">
+                                    <span>Stake</span>
+                                    <span id="summary-stake">GH₵ 10.00</span>
+                                </div>
+                                <div class="payout-row">
+                                    <span>Odds</span>
+                                    <span id="summary-odds">0.00</span>
+                                </div>
+                                <div class="payout-row total">
+                                    <span>Est. Return</span>
+                                    <span id="summary-payout">GH₵ 0.00</span>
+                                </div>
+                            </div>
+
+                            <button class="place-btn hover-lift" id="place-bet-btn" onclick="executeBet()">Confirm Bet</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- CASINO VIEW -->
+    <div id="view-casino" class="view-section">
+        <div class="layout-grid two-col">
+            <main>
+                <div class="games-grid">
+                    <div class="card hover-lift">
+                        <div class="card-header">🚀 Accra Crash</div>
+                        <div class="crash-container">
+                            <div class="multiplier-display" id="crash-multiplier">1.00x</div>
+                            <div id="crash-msg" style="margin-top: 10px; color: var(--text-sub);">Place your wager to launch.</div>
+                            <div class="crash-controls">
+                                <input type="number" id="crash-bet" class="bet-input" value="20" min="1" max="500">
+                                <button id="crash-btn" class="action-btn hover-lift" onclick="startCrash()">Place Bet</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card hover-lift">
+                        <div class="card-header">🎰 Kwasia Slots (12x Jackpot)</div>
+                        <div class="slots-container">
+                            <div class="slots-display">
+                                <div class="slot-reel" id="reel-1">⚽</div>
+                                <div class="slot-reel" id="reel-2">⚽</div>
+                                <div class="slot-reel" id="reel-3">⚽</div>
+                            </div>
+                            <div id="slots-msg" style="margin-bottom: 20px; font-weight: 700; color: var(--brand-red);">Match 3 symbols to win 12x your stake!</div>
+                            <div class="crash-controls">
+                                <input type="number" id="slots-bet" class="bet-input" value="10" min="1" max="500">
+                                <button id="slots-btn" class="action-btn hover-lift" onclick="spinSlots()">Spin</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR (SAME WALLET CONTROL) -->
+            <aside>
+                <div class="wallet-card hover-lift">
+                    <div class="wallet-header-text">Account Balance</div>
+                    <div class="wallet-amount main-wallet-display">GH₵ 25.00</div>
+                    <div class="pl-tracker" id="pl-badge-casino">P/L: GH₵ 0.00</div>
+                    <div class="wallet-btn-group">
+                        <button class="action-btn-massive hover-lift" onclick="openDepositModal()">Deposit via Paystack</button>
+                        <button class="btn-withdraw hover-lift" onclick="openWithdrawModal()">Cash Out (Withdraw)</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    
+    <!-- BALANCE & FINANCIAL HISTORY VIEW -->
+    <div id="view-balance" class="view-section">
+        <div class="layout-grid two-col">
+            <main>
+                <!-- PAYOUT & ODDS EXPLAINER -->
+                <div class="payout-explainer hover-lift">
+                    <h4>💡 How Payouts & Cash Outs Work on KwasiaBet</h4>
+                    <p style="color:var(--text-sub); font-size:13px;">
+                        KwasiaBet uses real-time decimal odds and server-authoritative fair margins.
+                        Here is a clear breakdown of how your money is calculated and paid out:
+                    </p>
+                    <div class="payout-grid">
+                        <div class="payout-item">
+                            <strong>⚽ Sports Odds Payout</strong>
+                            <div><code>Est. Return = Stake × Odds</code></div>
+                            <div style="color:var(--text-sub); margin-top:4px;">Example: Stake GH₵ 100 on odds 2.50 = GH₵ 250 payout (GH₵ 150 net profit). Credited immediately upon final whistle.</div>
+                        </div>
+                        <div class="payout-item">
+                            <strong>🚀 Accra Crash Multiplier</strong>
+                            <div><code>Cash Out Return = Stake × Multiplier</code></div>
+                            <div style="color:var(--text-sub); margin-top:4px;">Cashing out at 3.20x with a GH₵ 50 bet pays GH₵ 160 immediately into your balance. If the rocket crashes before cashout, the stake is lost.</div>
+                        </div>
+                        <div class="payout-item">
+                            <strong>🎰 Kwasia Slots Jackpot</strong>
+                            <div><code>Fixed Jackpot = Stake × 12.00</code></div>
+                            <div style="color:var(--text-sub); margin-top:4px;">Match 3 identical icons across reels (e.g. 💎 💎 💎) to instantly trigger the 12x payout directly to your wallet.</div>
+                        </div>
+                        <div class="payout-item">
+                            <strong>📱 Mobile Money Cash Out</strong>
+                            <div><code>Direct to MTN / Telecel / AirtelTigo</code></div>
+                            <div style="color:var(--text-sub); margin-top:4px;">Withdrawals between GH₵ 10 and GH₵ 1,000 are processed via Paystack Transfer API straight to your mobile phone number.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FINANCIAL SUMMARY CARDS -->
+                <div class="stats-grid">
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Available Balance</span>
+                        <span class="stat-val main-wallet-display" id="bal-summary-available">GH₵ 25.00</span>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Total Deposited</span>
+                        <span class="stat-val" id="bal-summary-deposits">GH₵ 0.00</span>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Total Cashed Out</span>
+                        <span class="stat-val" id="bal-summary-withdrawals">GH₵ 0.00</span>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Total Won</span>
+                        <span class="stat-val positive" id="bal-summary-won">GH₵ 0.00</span>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Total Staked</span>
+                        <span class="stat-val" id="bal-summary-staked">GH₵ 0.00</span>
+                    </div>
+                    <div class="stat-card hover-lift">
+                        <span class="stat-label">Net Profit / Loss</span>
+                        <span class="stat-val" id="bal-summary-net">GH₵ 0.00</span>
+                    </div>
+                </div>
+
+                <!-- DETAILED FINANCIAL TRANSACTION HISTORY -->
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <span>📜 Comprehensive Financial Statement</span>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <button class="auth-btn" style="padding: 4px 10px; font-size: 11px;" onclick="fetchFullHistory()">🔄 Refresh Statement</button>
+                        </div>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Filter Chips -->
+                        <div class="filter-bar">
+                            <button class="filter-btn active" id="f-all" onclick="filterTransactions('all')">All Activity</button>
+                            <button class="filter-btn" id="f-deposits" onclick="filterTransactions('deposits')">Deposits (Cash In)</button>
+                            <button class="filter-btn" id="f-withdrawals" onclick="filterTransactions('withdrawals')">Withdrawals (Cash Out)</button>
+                            <button class="filter-btn" id="f-wins" onclick="filterTransactions('wins')">Wins (Payouts)</button>
+                            <button class="filter-btn" id="f-losses" onclick="filterTransactions('losses')">Losses (Stakes)</button>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="financial-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Activity Type</th>
+                                        <th>Description / Reference</th>
+                                        <th>Amount</th>
+                                        <th>Result / Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="financial-table-body">
+                                    <tr>
+                                        <td colspan="5" style="text-align:center; padding:30px; color:var(--text-sub);">
+                                            Log in to view your complete financial history.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR (WALLET CARD) -->
+            <aside>
+                <div class="wallet-card hover-lift">
+                    <div class="wallet-header-text">Account Balance</div>
+                    <div class="wallet-amount main-wallet-display">GH₵ 25.00</div>
+                    <div class="pl-tracker" id="pl-badge-bal">P/L: GH₵ 0.00</div>
+                    <div class="wallet-btn-group">
+                        <button class="action-btn-massive hover-lift" onclick="openDepositModal()">Deposit via Paystack</button>
+                        <button class="btn-withdraw hover-lift" onclick="openWithdrawModal()">Cash Out (Withdraw)</button>
+                    </div>
+                </div>
+
+                <div class="card hover-lift" style="padding: 20px;">
+                    <h4 style="margin-bottom: 12px; font-size: 14px;">🔒 Financial Guarantee</h4>
+                    <p style="color:var(--text-sub); font-size: 12px; line-height: 1.6;">
+                        All deposits and withdrawals are processed in Ghana Cedis (GH₵) via PCI-DSS certified Paystack payment gateway.
+                        Odds calculations adhere to a 95% fair RTP margin.
+                    </p>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- PROFILE & DETAILED SETTINGS VIEW -->
+    <div id="view-profile" class="view-section">
+        <div class="layout-grid two-col">
+            <main>
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <span>👤 Account & Profile Settings</span>
+                        <span style="font-size:11px; color:var(--text-sub);">Connected to SQLite Database</span>
+                    </div>
+                    <div style="padding: 24px;">
+                        <div id="profile-logged-out-msg" style="display:none; text-align:center; padding:30px; color:var(--text-sub);">
+                            Please log in or create an account to view and edit your profile settings.
+                            <div style="margin-top:16px;">
+                                <button class="place-btn" style="max-width:200px; margin:0 auto;" onclick="openAuthModal('login')">Log In Now</button>
+                            </div>
+                        </div>
+
+                        <form id="profile-form" onsubmit="saveProfile(event)" style="display:block;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="input-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="prof-email" disabled style="opacity:0.6; cursor:not-allowed;">
+                                </div>
+                                <div class="input-group">
+                                    <label>Username / Display Handle</label>
+                                    <input type="text" id="prof-username" placeholder="e.g. kwasia_master">
+                                </div>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="input-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="prof-fullname" placeholder="e.g. Kwame Mensah">
+                                </div>
+                                <div class="input-group">
+                                    <label>Phone Number (Mobile Money)</label>
+                                    <input type="tel" id="prof-phone" placeholder="e.g. 024XXXXXXX">
+                                </div>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="input-group">
+                                    <label>Default Currency</label>
+                                    <select id="prof-currency">
+                                        <option value="GHS">GHS (GH₵ - Ghana Cedi)</option>
+                                        <option value="USD">USD ($ - US Dollar)</option>
+                                        <option value="EUR">EUR (€ - Euro)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label>Appearance Theme</label>
+                                    <select id="prof-theme" onchange="setTheme(this.value)">
+                                        <option value="dark">🌙 Dark Mode (Default)</option>
+                                        <option value="light">☀️ Light Mode</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr style="border:none; border-top:1px solid rgba(255,255,255,0.06); margin: 24px 0;">
+
+                            <h4 style="font-size:14px; margin-bottom:14px;">🔐 Change Password (Optional)</h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="input-group">
+                                    <label>Current Password</label>
+                                    <input type="password" id="prof-curr-pass" placeholder="••••••">
+                                </div>
+                                <div class="input-group">
+                                    <label>New Password (min 6 chars)</label>
+                                    <input type="password" id="prof-new-pass" placeholder="••••••">
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 24px; display:flex; gap:12px;">
+                                <button type="submit" class="place-btn hover-lift" id="prof-save-btn" style="max-width:240px;">Save Profile Changes</button>
+                                <span id="prof-save-status" style="align-self:center; font-size:13px; color:var(--brand-green); font-weight:700;"></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR (PROFILE DETAILS SUMMARY) -->
+            <aside>
+                <div class="card hover-lift" style="padding: 24px;">
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div style="width:70px; height:70px; border-radius:50%; background:var(--brand-red); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 12px auto; color:#fff;" id="prof-avatar">👤</div>
+                        <h3 id="prof-display-name" style="font-size:17px; margin-bottom:4px;">Player</h3>
+                        <div id="prof-display-email" style="font-size:12px; color:var(--text-sub);">player@example.com</div>
+                    </div>
+                    <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:16px; display:flex; flex-direction:column; gap:10px; font-size:13px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-sub);">Member Since:</span>
+                            <span id="prof-meta-created">--</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-sub);">Account Type:</span>
+                            <span id="prof-meta-role" style="font-weight:700;">Standard Player</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--text-sub);">Initial Credits:</span>
+                            <span id="prof-meta-initial">GH₵ 25.00</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Login / Register) -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 20px; font-size: 20px;" id="auth-modal-title">Log In</h3>
+            <div class="input-group">
+                <label>Email Address <span style="color:var(--brand-red)">*</span></label>
+                <input type="email" id="auth-email-input" placeholder="player@gmail.com">
+            </div>
+            <div class="input-group" id="phone-group" style="display: none;">
+                <label>Mobile Money / Phone <span style="font-weight:400; font-size:11px; color:var(--text-sub)">(Optional)</span></label>
+                <input type="tel" id="auth-phone-input" placeholder="024XXXXXXX">
+            </div>
+            <div class="input-group">
+                <label>Password <span style="color:var(--brand-red)">*</span></label>
+                <input type="password" id="auth-password-input" placeholder="******">
+            </div>
+            <button class="place-btn hover-lift" id="auth-submit-btn" onclick="submitAuth()">Log In</button>
+            <div style="display:flex; justify-content:space-between; margin-top:12px;">
+                <button class="auth-btn" style="background:transparent; color:var(--text-sub);" id="auth-toggle-btn" onclick="toggleAuthMode()">Don't have an account? Sign Up</button>
+                <button class="auth-btn" style="background:transparent; color:var(--text-sub);" onclick="closeAuthModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div class="modal-overlay" id="deposit-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">Paystack Deposit</h3>
+            <div class="input-group">
+                <label>Deposit Method <span style="color:var(--brand-red)">*</span></label>
+                <select id="deposit-method-select" onchange="toggleDepositFields()">
+                    <option value="checkout">Paystack Web Checkout (Card / All Options)</option>
+                    <option value="momo">Ghana Mobile Money (Direct Phone Prompt)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Deposit Amount (GH₵) <span style="color:var(--brand-red)">*</span></label>
+                <input type="number" id="modal-deposit-input" value="50" min="1" max="5000" required>
+            </div>
+            <div id="momo-deposit-fields" style="display:none;">
+                <div class="input-group">
+                    <label>Mobile Network <span style="color:var(--brand-red)">*</span></label>
+                    <select id="deposit-network-select">
+                        <option value="MTN">MTN Mobile Money</option>
+                        <option value="VOD">Vodafone / Telecel Cash</option>
+                        <option value="ATL">AirtelTigo Money</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Mobile Number <span style="color:var(--brand-red)">*</span></label>
+                    <input type="tel" id="modal-phone-input" placeholder="024XXXXXXX">
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="place-btn hover-lift" style="background: rgba(255,255,255,0.1);" onclick="closeDepositModal()">Cancel</button>
+                <button class="place-btn hover-lift" style="background: var(--brand-red); color: #fff;" id="deposit-submit-btn" onclick="submitPaystackDeposit()">Deposit Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash Out Modal -->
+    <div class="modal-overlay" id="withdraw-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">Cash Out to Mobile Money</h3>
+            <div class="input-group">
+                <label>Withdraw Amount (GH₵) <span style="color:var(--brand-red)">* (Min GH₵ 10)</span></label>
+                <input type="number" id="withdraw-amount-input" value="20" min="10" max="1000" required>
+            </div>
+            <div class="input-group">
+                <label>Mobile Network <span style="color:var(--brand-red)">*</span></label>
+                <select id="withdraw-network-select">
+                    <option value="MTN">MTN Mobile Money</option>
+                    <option value="VOD">Vodafone / Telecel Cash</option>
+                    <option value="ATL">AirtelTigo Money</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Mobile Number (024XXXXXXX) <span style="color:var(--brand-red)">*</span></label>
+                <input type="tel" id="withdraw-phone-input" placeholder="024XXXXXXX" required>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="place-btn hover-lift" style="background: rgba(255,255,255,0.1);" onclick="closeWithdrawModal()">Cancel</button>
+                <button class="place-btn hover-lift" style="background: var(--brand-red); color: #fff;" id="withdraw-submit-btn" onclick="submitWithdrawal()">Confirm Cash Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Tools Modal -->
+    <div class="modal-overlay" id="dev-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 16px; font-size: 20px;">⚙️ Developer Dashboard</h3>
+            <div id="dev-pin-group">
+                <div class="input-group">
+                    <label>Enter Developer PIN</label>
+                    <input type="password" id="dev-pin-input" placeholder="e.g. 1234">
+                </div>
+                <button class="place-btn hover-lift" onclick="submitDevUnlock()">Unlock Dev Tools</button>
+            </div>
+            <div id="dev-controls-group" style="display: none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span style="font-weight:700;">Developer Mode:</span>
+                    <label style="cursor:pointer;"><input type="checkbox" id="dev-toggle-chk" onchange="devToggleMode(this)"> Enable Dev Mode</label>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button class="auth-btn" style="background:var(--brand-red); padding:12px;" onclick="devQuickLogin()">👤 Quick Login as Dev Account</button>
+                    <button class="auth-btn" style="background:rgba(255,255,255,0.1); padding:12px;" onclick="devTopUp()">💰 Add +GH₵ 1,000 Test Credits</button>
+                    <button class="auth-btn" style="background:rgba(255,59,48,0.2); color:var(--brand-red); padding:12px;" onclick="devResetAccount()">🔄 Reset Dev Account</button>
+                </div>
+            </div>
+            <button class="place-btn hover-lift" style="background:transparent; color:var(--text-sub); margin-top:14px;" onclick="closeDevModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Frontend League Definitions (Mirror of server leagues.json for instant UI responsiveness)
+        const LEAGUES = {
+            epl: {
+                name: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League",
+                teams: {
+                    "Man City": 99, "Arsenal": 88, "Liverpool": 87, "Chelsea": 82, "Spurs": 80, "Man Utd": 79, "Newcastle": 78, "Aston Villa": 77,
+                    "Brighton": 75, "West Ham": 74, "Crystal Palace": 72, "Bournemouth": 71, "Fulham": 70, "Brentford": 69,
+                    "Everton": 67, "Wolves": 66, "Nott'm Forest": 65, "Leicester": 63, "Southampton": 61, "Ipswich": 59
+                }
+            },
+            gpl: {
+                name: "🇬🇭 Ghana Premier League",
+                teams: {
+                    "Asante Kotoko": 90, "Hearts of Oak": 89, "Medeama SC": 85, "Aduana Stars": 84, "Nsoatreman": 80, "Berekum Chelsea": 78,
+                    "Bechem Utd": 77, "Samartex": 76, "Legon Cities": 74, "Karela Utd": 73, "Dreams FC": 72, "Accra Lions": 71,
+                    "Gold Stars": 70, "Nations FC": 69, "Heart of Lions": 68, "Vision FC": 66, "Young Apostles": 64, "Basake Holy Stars": 62,
+                    "Real Tamale": 60, "Bofoakwa Tano": 58
+                }
+            },
+            laliga: {
+                name: "🇪🇸 La Liga",
+                teams: {
+                    "Real Madrid": 98, "Barcelona": 94, "Atletico Madrid": 89, "Athletic Bilbao": 83, "Real Sociedad": 81, "Girona": 80,
+                    "Villarreal": 79, "Betis": 78, "Sevilla": 77, "Valencia": 75, "Osasuna": 74, "Getafe": 73,
+                    "Celta Vigo": 72, "Rayo Vallecano": 71, "Mallorca": 70, "Las Palmas": 68, "Espanyol": 67, "Alaves": 66,
+                    "Leganes": 63, "Valladolid": 61
+                }
+            },
+            saudi: {
+                name: "🇸🇦 Saudi Pro League",
+                teams: {
+                    "Al Hilal": 96, "Al Nassr": 93, "Al Ahli": 88, "Al Ittihad": 87, "Al Shabab": 80, "Al Ettifaq": 78,
+                    "Al Taawoun": 76, "Al Fateh": 74, "Al Khaleej": 72, "Al Raed": 71, "Al Fayha": 70, "Al Damac": 69,
+                    "Al Wehda": 68, "Al Riyadh": 66, "Al Kholood": 64, "Al Orobah": 63, "Al Qadsiah": 79, "Al Okhdood": 61,
+                    "Al Hazem": 59, "Al Tai": 58
+                }
+            },
+            ucl: {
+                name: "🇪🇺 Champions League",
+                teams: {
+                    "Real Madrid": 98, "Man City": 97, "Bayern Munich": 95, "PSG": 93, "Inter Milan": 92, "Arsenal": 90,
+                    "Barcelona": 89, "Bayer Leverkusen": 88, "Borussia Dortmund": 87, "Atletico Madrid": 86, "Juventus": 85, "AC Milan": 84,
+                    "Liverpool": 88, "Atalanta": 83, "Benfica": 82, "Sporting CP": 81, "RB Leipzig": 80, "Monaco": 79,
+                    "Aston Villa": 78, "Girona": 77
+                }
+            }
+        };
+
+        // Automatically detect backend URL:
+        // If not running on port 3001 (e.g. VS Code Live Server on 5500/5501 or file://), connect to localhost:3001
+        const API_BASE = (window.location.port === '3001')
+            ? ''
+            : `${window.location.protocol.startsWith('http') ? window.location.protocol : 'http:'}//${window.location.hostname || 'localhost'}:3001`;
+        const apiUrl = (path) => `${API_BASE}${path}`;
+        let currentLeagueKey = "epl";
+        let currentAuthMode = 'login';
+        let devToken = null;
+
+        let state = {
+            token: localStorage.getItem('kb_token') || null,
+            user: JSON.parse(localStorage.getItem('kb_user') || 'null'),
+            initialBalance: 25.00,
+            balance: 25.00,
+            season: { matchday: 1, standings: {}, currentFixtures: [] },
+            activeSelection: null,
+            history: []
+        };
+
+        const formatGHS = (val) => `GH₵ ${(val || 0).toFixed(2)}`;
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            const nav = document.getElementById(`nav-${tabName}`);
+            if (nav) nav.classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            const view = document.getElementById(`view-${tabName}`);
+            if (view) view.classList.add('active');
+        }
+
+        async function selectLeague(key) {
+            if (!LEAGUES[key]) return;
+            currentLeagueKey = key;
+            
+            document.querySelectorAll('.league-chip').forEach(c => c.classList.remove('active'));
+            const activeChip = document.getElementById(`chip-${key}`);
+            if (activeChip) activeChip.classList.add('active');
+
+            document.getElementById('active-league-title').innerText = LEAGUES[key].name;
+            document.getElementById('league-table-title').innerText = `${LEAGUES[key].name.split(' ')[1]} Table`;
+
+            state.activeSelection = null;
+            updateSlipUI();
+            startNewSeason();
+            updateUI();
+            await fetchFixtures(key);
+        }
+
+        async function fetchFixtures(leagueKey) {
+            const board = document.getElementById('fixtures-board');
+            if (board) board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">Loading fixtures...</div>';
+            
+            try {
+                const headers = {};
+                if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+                const res = await fetch(apiUrl(`/api/fixtures/${leagueKey}`), { headers });
+                const data = await res.json();
+                if (data.success && data.fixtures) {
+                    state.season.currentFixtures = data.fixtures;
+                    renderFixtures();
+                } else {
+                    board.innerHTML = `<div style="color:var(--brand-red); text-align:center; padding:30px;">${data.error || 'Failed to load fixtures.'}</div>`;
+                }
+            } catch (err) {
+                board.innerHTML = '<div style="color:var(--brand-red); text-align:center; padding:30px;">Could not connect to game server.</div>';
+            }
+        }
+
+        function renderFixtures() {
+            const board = document.getElementById('fixtures-board'); 
+            if (!board) return;
+            board.innerHTML = '';
+
+            if (!state.season.currentFixtures || state.season.currentFixtures.length === 0) {
+                board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">No fixtures available right now.</div>';
+                return;
+            }
+
+            state.season.currentFixtures.forEach(fix => {
+                let sel = state.activeSelection;
+                let isH = sel && sel.fixtureId === fix.id && sel.choice === 'home';
+                let isD = sel && sel.fixtureId === fix.id && sel.choice === 'draw';
+                let isA = sel && sel.fixtureId === fix.id && sel.choice === 'away';
+                
+                board.innerHTML += `
+                    <div class="fixture-card hover-lift">
+                        <div class="fixture-meta">
+                            <span>Matchday ${state.season.matchday}</span>
+                            <span style="color: var(--brand-red);">Live Market</span>
+                        </div>
+                        <div class="fixture-teams">
+                            <span>${fix.home}</span>
+                            <span style="color: var(--brand-red); font-size: 13px;">VS</span>
+                            <span>${fix.away}</span>
+                        </div>
+                        <div class="odds-row">
+                            <div class="odds-cell ${isH ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'home', ${fix.odds.home})">
+                                <span class="odds-label">1 (Home)</span>
+                                <span class="odds-val">${fix.odds.home.toFixed(2)}</span>
+                            </div>
+                            <div class="odds-cell ${isD ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'draw', ${fix.odds.draw})">
+                                <span class="odds-label">X (Draw)</span>
+                                <span class="odds-val">${fix.odds.draw.toFixed(2)}</span>
+                            </div>
+                            <div class="odds-cell ${isA ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'away', ${fix.odds.away})">
+                                <span class="odds-label">2 (Away)</span>
+                                <span class="odds-val">${fix.odds.away.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function selectOdds(fixtureId, choice, oddsVal) {
+            let fixture = state.season.currentFixtures.find(f => f.id === fixtureId);
+            if (!fixture) return;
+
+            if (state.activeSelection && state.activeSelection.fixtureId === fixtureId && state.activeSelection.choice === choice) {
+                state.activeSelection = null;
+            } else {
+                state.activeSelection = { 
+                    fixtureId, 
+                    choice, 
+                    oddsVal, 
+                    teamName: choice === 'home' ? fixture.home : (choice === 'away' ? fixture.away : 'Draw'), 
+                    matchName: `${fixture.home} vs ${fixture.away}` 
+                };
+            }
+            renderFixtures(); 
+            updateSlipUI();
+        }
+
+        function updateSlipUI() {
+            const emptyMsg = document.getElementById('slip-empty-msg');
+            const activeContent = document.getElementById('slip-active-content');
+            const slipCount = document.getElementById('slip-count');
+
+            if (!state.activeSelection) { 
+                emptyMsg.style.display = 'block'; 
+                activeContent.style.display = 'none'; 
+                slipCount.innerText = '0'; 
+                return; 
+            }
+
+            emptyMsg.style.display = 'none'; 
+            activeContent.style.display = 'block'; 
+            slipCount.innerText = '1';
+
+            document.getElementById('slip-selection-team').innerText = `${state.activeSelection.teamName}`;
+            document.getElementById('slip-selection-match').innerText = state.activeSelection.matchName;
+            document.getElementById('slip-selection-odds').innerText = state.activeSelection.oddsVal.toFixed(2);
+            updateSlipPayout();
+        }
+
+        function addStake(amount) { 
+            const input = document.getElementById('stake-input'); 
+            input.value = Math.min(500, (parseFloat(input.value) || 0) + amount); 
+            updateSlipPayout(); 
+        }
+
+        function updateSlipPayout() {
+            if (!state.activeSelection) return;
+            const stake = parseFloat(document.getElementById('stake-input').value) || 0;
+            const odds = state.activeSelection.oddsVal;
+            
+            document.getElementById('summary-stake').innerText = formatGHS(stake); 
+            document.getElementById('summary-odds').innerText = odds.toFixed(2); 
+            document.getElementById('summary-payout').innerText = formatGHS(stake * odds);
+        }
+
+        async function executeBet() {
+            if (!state.user || !state.token) {
+                openAuthModal('login');
+                return alert("Please log in or sign up to place bets.");
+            }
+            if (!state.activeSelection) return;
+            const stake = parseFloat(document.getElementById('stake-input').value);
+            if (isNaN(stake) || stake <= 0) return alert("Enter a valid stake."); 
+            if (stake > state.balance) return alert("Insufficient funds in balance. Please deposit.");
+
+            const btn = document.getElementById('place-bet-btn');
+            btn.disabled = true;
+            btn.innerText = "Confirming Bet...";
+
+            try {
+                const res = await fetch(apiUrl('/api/bets/place'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({
+                        fixtureId: state.activeSelection.fixtureId,
+                        choice: state.activeSelection.choice,
+                        stake: stake
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert("Bet Error: " + (data.error || "Could not place bet"));
+                    if (data.error && data.error.includes('expired')) {
+                        fetchFixtures(currentLeagueKey);
+                    }
+                    return;
+                }
+
+                state.balance = data.balance;
+                updateUI();
+
+                const matchName = state.activeSelection.matchName;
+                const pickName = state.activeSelection.teamName;
+                const scoreText = data.score ? `${data.score.h} - ${data.score.a}` : '';
+
+                if (data.won) {
+                    alert(`🎉 BET WON!\nMatch: ${matchName}\nScore: ${scoreText}\nSelection: ${pickName}\nPayout: ${formatGHS(data.payout)}`);
+                } else {
+                    alert(`❌ BET LOST\nMatch: ${matchName}\nScore: ${scoreText}\nSelection: ${pickName}`);
+                }
+
+                state.activeSelection = null;
+                updateSlipUI();
+                simulateStandingsAfterMatch(data.won, data.score);
+                await fetchFixtures(currentLeagueKey);
+                fetchHistory();
+            } catch (err) {
+                alert("Network error: Failed to reach betting server.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Bet";
+            }
+        }
+
+        function simulateStandingsAfterMatch(userWon, score) {
+            state.season.matchday++;
+            if (state.season.matchday > 38) {
+                alert("Season Completed! Starting a new season...");
+                startNewSeason();
+            }
+            updateUI();
+        }
+
+        function startNewSeason() {
+            state.season.matchday = 1;
+            state.season.standings = {};
+            if (!LEAGUES[currentLeagueKey]) return;
+            const teams = Object.keys(LEAGUES[currentLeagueKey].teams);
+            teams.forEach(team => {
+                state.season.standings[team] = { p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+            });
+        }
+
+        function updateUI() {
+            document.querySelectorAll('.main-wallet-display').forEach(el => {
+                el.innerText = formatGHS(state.balance);
+            });
+
+            const plDiff = state.balance - state.initialBalance;
+            const badgeTxt = `P/L: ${plDiff >= 0 ? '+' : ''}${formatGHS(plDiff)}`;
+            
+            ['pl-badge', 'pl-badge-casino'].forEach(id => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    badge.innerText = badgeTxt;
+                    badge.className = 'pl-tracker ' + (plDiff >= 0 ? 'profit' : 'loss');
+                }
+            });
+
+            const matchdayTag = document.getElementById('matchday-tag');
+            if (matchdayTag) {
+                matchdayTag.innerText = `MD ${state.season.matchday}/38`;
+            }
+            
+            const tbody = document.getElementById('standings-body');
+            if (tbody) {
+                tbody.innerHTML = '';
+                const sortedStandings = Object.entries(state.season.standings)
+                    .sort((a, b) => b[1].pts - a[1].pts || b[1].gd - a[1].gd);
+
+                sortedStandings.forEach(([team, d], idx) => {
+                    let posCls = idx < 4 ? 'pos-top' : (idx >= 17 ? 'pos-bot' : '');
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="${posCls}">${idx + 1}</td>
+                            <td><strong>${team}</strong></td>
+                            <td>${d.p}</td>
+                            <td>${d.gd > 0 ? '+' + d.gd : d.gd}</td>
+                            <td><strong>${d.pts}</strong></td>
+                        </tr>`;
+                });
+            }
+        }
+
+        // ---------- Authentication ----------
+        function openAuthModal(mode) {
+            currentAuthMode = mode;
+            document.getElementById('auth-modal-title').innerText = mode === 'login' ? 'Log In' : 'Sign Up';
+            document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'Log In' : 'Create Account';
+            document.getElementById('phone-group').style.display = mode === 'register' ? 'block' : 'none';
+            document.getElementById('auth-toggle-btn').innerText = mode === 'login' ? "Don't have an account? Sign Up" : "Already have an account? Log In";
+            document.getElementById('auth-modal').classList.add('active');
+        }
+
+        function toggleAuthMode() {
+            openAuthModal(currentAuthMode === 'login' ? 'register' : 'login');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+        }
+
+        async function submitAuth() {
+            const email = document.getElementById('auth-email-input').value.trim();
+            const password = document.getElementById('auth-password-input').value;
+            const phone = document.getElementById('auth-phone-input').value.trim();
+
+            if (!email || !email.includes('@')) return alert("Enter a valid email address.");
+            if (!password || password.length < 6) return alert("Password must be at least 6 characters.");
+
+            const endpoint = currentAuthMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+            const payload = currentAuthMode === 'login' ? { email, password } : { email, password, phone: phone || null };
+
+            try {
+                const res = await fetch(apiUrl(endpoint), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    state.token = data.token;
+                    state.user = data.user;
+                    state.balance = data.user.balance;
+                    state.initialBalance = data.user.initial_balance;
+                    localStorage.setItem('kb_token', data.token);
+                    localStorage.setItem('kb_user', JSON.stringify(data.user));
+                    closeAuthModal();
+                    updateAuthUI();
+            updateProfileUI();
+                    updateUI();
+                    fetchHistory();
+                    fetchFixtures(currentLeagueKey);
+                } else {
+                    alert("Auth error: " + (data.error || "Authentication failed."));
+                }
+            } catch (err) {
+                alert("Could not connect to authentication server!");
+            }
+        }
+
+        function logout() {
+            state.token = null;
+            state.user = null;
+            localStorage.removeItem('kb_token');
+            localStorage.removeItem('kb_user');
+            state.balance = 25.00;
+            state.initialBalance = 25.00;
+            updateAuthUI();
+            updateUI();
+            const histDiv = document.getElementById('history-feed');
+            if (histDiv) histDiv.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">Log in to view history.</div>';
+        }
+
+        function updateAuthUI() {
+            const controls = document.getElementById('auth-controls');
+            if (state.user && state.token) {
+                controls.innerHTML = `
+                    <span class="user-email-tag">
+                        👤 ${state.user.email}
+                        ${state.user.is_dev ? '<span class="dev-badge">DEV</span>' : ''}
+                    </span>
+                    <button class="auth-btn dev-btn" onclick="openDevModal()">⚙️ Dev</button>
+                    <button class="auth-btn" onclick="logout()">Logout</button>
+                `;
+            } else {
+                controls.innerHTML = `
+                    <button class="auth-btn" onclick="openAuthModal('login')">Log In</button>
+                    <button class="auth-btn primary" onclick="openAuthModal('register')">Sign Up</button>
+                    <button class="auth-btn dev-btn" onclick="openDevModal()">⚙️ Dev</button>
+                `;
+            }
+        }
+
+        // ---------- Casino: Accra Crash ----------
+        let crashInterval = null;
+        let isCrashing = false;
+
+        async function startCrash() {
+            if (!state.user || !state.token) {
+                openAuthModal('login');
+                return alert("Please log in to play Accra Crash.");
+            }
+            if (isCrashing) return;
+            const stake = parseFloat(document.getElementById('crash-bet').value);
+            if (isNaN(stake) || stake <= 0 || stake > 500) return alert("Enter a stake between 1 and 500.");
+            if (stake > state.balance) return alert("Insufficient funds in balance!");
+
+            const btn = document.getElementById('crash-btn');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(apiUrl('/api/casino/crash/start'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({ stake })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert(data.error || "Could not launch crash round.");
+                    btn.disabled = false;
+                    return;
+                }
+
+                state.balance = data.balance;
+                updateUI();
+
+                isCrashing = true;
+                btn.disabled = false;
+                btn.innerText = "Cash Out";
+                btn.classList.add('cashout');
+                btn.onclick = cashoutCrash;
+                document.getElementById('crash-multiplier').classList.remove('crashed');
+                document.getElementById('crash-msg').innerText = "🚀 Rocket climbing! Cash out before the crash!";
+
+                const startTime = Date.now();
+                if (crashInterval) clearInterval(crashInterval);
+                crashInterval = setInterval(async () => {
+                    if (!isCrashing) return;
+                    const elapsed = Date.now() - startTime;
+                    const localMult = Math.floor((1 + elapsed / 3000) * 100) / 100;
+                    document.getElementById('crash-multiplier').innerText = localMult.toFixed(2) + "x";
+
+                    if (elapsed % 300 < 60) {
+                        try {
+                            const sRes = await fetch(apiUrl('/api/casino/crash/status'), {
+                                headers: { 'Authorization': `Bearer ${state.token}` }
+                            });
+                            const sData = await sRes.json();
+                            if (sData.crashed) {
+                                endCrash(true, sData.mult);
+                            }
+                        } catch {}
+                    }
+                }, 50);
+            } catch {
+                alert("Failed to communicate with crash engine.");
+                btn.disabled = false;
+            }
+        }
+
+        async function cashoutCrash() {
+            if (!isCrashing) return;
+            const btn = document.getElementById('crash-btn');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(apiUrl('/api/casino/crash/cashout'), {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                const data = await res.json();
+                if (data.crashed) {
+                    endCrash(true, data.mult);
+                } else if (data.won) {
+                    endCrash(false, data.mult, data.payout);
+                    if (data.balance !== undefined) state.balance = data.balance;
+                    updateUI();
+                }
+            } catch {
+                alert("Cashout network failure.");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function endCrash(crashed, mult, payout = 0) {
+            isCrashing = false;
+            if (crashInterval) clearInterval(crashInterval);
+            const disp = document.getElementById('crash-multiplier');
+            const msg = document.getElementById('crash-msg');
+            const btn = document.getElementById('crash-btn');
+
+            disp.innerText = (mult || 1.00).toFixed(2) + "x";
+            if (crashed) {
+                disp.classList.add('crashed');
+                msg.innerText = `💥 Crashed at ${(mult || 1.00).toFixed(2)}x! Bet lost.`;
+            } else {
+                disp.classList.remove('crashed');
+                msg.innerText = `🎉 Cashed out at ${(mult || 1.00).toFixed(2)}x! Won ${formatGHS(payout)}`;
+            }
+
+            btn.innerText = "Place Bet";
+            btn.classList.remove('cashout');
+            btn.onclick = startCrash;
+            fetchHistory();
+        }
+
+        // ---------- Casino: Slots ----------
+        const slotSymbols = ["🍒", "🔔", "💎", "⚽"];
+        let isSpinningSlots = false;
+
+        async function spinSlots() {
+            if (!state.user || !state.token) {
+                openAuthModal('login');
+                return alert("Please log in to spin slots.");
+            }
+            if (isSpinningSlots) return;
+            const stake = parseFloat(document.getElementById('slots-bet').value);
+            if (isNaN(stake) || stake <= 0 || stake > 500) return alert("Enter a stake between 1 and 500.");
+            if (stake > state.balance) return alert("Insufficient funds in balance!");
+
+            const btn = document.getElementById('slots-btn');
+            btn.disabled = true;
+            isSpinningSlots = true;
+            document.getElementById('slots-msg').innerText = "Spinning reels...";
+
+            const spinAnim = setInterval(() => {
+                document.getElementById('reel-1').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                document.getElementById('reel-2').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                document.getElementById('reel-3').innerText = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+            }, 60);
+
+            try {
+                const res = await fetch(apiUrl('/api/casino/slots'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({ stake })
+                });
+                const data = await res.json();
+
+                setTimeout(() => {
+                    clearInterval(spinAnim);
+                    isSpinningSlots = false;
+                    btn.disabled = false;
+
+                    if (!data.success) {
+                        alert(data.error || "Slot spin failed.");
+                        return;
+                    }
+
+                    document.getElementById('reel-1').innerText = data.reels[0];
+                    document.getElementById('reel-2').innerText = data.reels[1];
+                    document.getElementById('reel-3').innerText = data.reels[2];
+
+                    state.balance = data.balance;
+                    updateUI();
+
+                    if (data.won) {
+                        document.getElementById('slots-msg').innerText = `🎉 3-OF-A-KIND! Won ${formatGHS(data.payout)}!`;
+                    } else {
+                        document.getElementById('slots-msg').innerText = "Try again!";
+                    }
+                    fetchHistory();
+                }, 800);
+            } catch {
+                clearInterval(spinAnim);
+                isSpinningSlots = false;
+                btn.disabled = false;
+                alert("Failed to communicate with slot machine.");
+            }
+        }
+
+        // ---------- Deposits & Paystack ----------
+        function openDepositModal() {
+            if (!state.user || !state.token) {
+                openAuthModal('login');
+                return alert("Please log in to make a deposit.");
+            }
+            document.getElementById('deposit-modal').classList.add('active');
+        }
+        function closeDepositModal() {
+            document.getElementById('deposit-modal').classList.remove('active');
+        }
+        function toggleDepositFields() {
+            const m = document.getElementById('deposit-method-select').value;
+            document.getElementById('momo-deposit-fields').style.display = m === 'momo' ? 'block' : 'none';
+        }
+
+        async function submitPaystackDeposit() {
+            if (!state.user || !state.token) return;
+            const amount = parseFloat(document.getElementById('modal-deposit-input').value);
+            const method = document.getElementById('deposit-method-select').value;
+            const phone = document.getElementById('modal-phone-input').value.trim();
+            const network = document.getElementById('deposit-network-select').value;
+
+            if (!amount || amount < 1 || amount > 5000) {
+                return alert("Deposit must be between GH₵ 1 and GH₵ 5,000.");
+            }
+
+            const payload = { amount };
+            if (method === 'momo') {
+                if (!phone) return alert("Enter your Ghana mobile number (e.g. 024XXXXXXX).");
+                payload.phone = phone;
+                payload.network = network;
+            }
+
+            const btn = document.getElementById('deposit-submit-btn');
+            btn.disabled = true;
+            btn.innerText = "Contacting Paystack...";
+
+            try {
+                const res = await fetch(apiUrl('/api/payments/initialize'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert("Deposit Error: " + (data.error || "Initialization failed"));
+                    btn.disabled = false;
+                    btn.innerText = "Deposit Now";
+                    return;
+                }
+
+                if (data.mode === 'checkout' && data.authorization_url) {
+                    window.location.href = data.authorization_url;
+                    return;
+                }
+
+                if (data.mode === 'momo') {
+                    closeDepositModal();
+                    alert(`📱 Mobile Prompt Sent!\n${data.message || 'Please approve the debit on your mobile phone.'}`);
+                    pollDepositVerification(data.reference);
+                }
+            } catch {
+                alert("Payment gateway connection error.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Deposit Now";
+            }
+        }
+
+        function pollDepositVerification(reference) {
+            let count = 0;
+            const timer = setInterval(async () => {
+                count++;
+                if (count > 25) { clearInterval(timer); return; }
+                try {
+                    const res = await fetch(apiUrl('/api/payments/verify'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${state.token}`
+                        },
+                        body: JSON.stringify({ reference })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                        clearInterval(timer);
+                        state.balance = d.balance;
+                        updateUI();
+                        alert(d.message || "Deposit verified and credited!");
+                        fetchHistory();
+                    }
+                } catch {}
+            }, 4000);
+        }
+
+        // ---------- Withdrawals (Cash Out) ----------
+        function openWithdrawModal() {
+            if (!state.user || !state.token) {
+                openAuthModal('login');
+                return alert("Please log in to withdraw funds.");
+            }
+            document.getElementById('withdraw-modal').classList.add('active');
+        }
+        function closeWithdrawModal() {
+            document.getElementById('withdraw-modal').classList.remove('active');
+        }
+
+        async function submitWithdrawal() {
+            if (!state.user || !state.token) return;
+            const amount = parseFloat(document.getElementById('withdraw-amount-input').value);
+            const phone = document.getElementById('withdraw-phone-input').value.trim();
+            const network = document.getElementById('withdraw-network-select').value;
+
+            if (!amount || amount < 10 || amount > 1000) {
+                return alert("Cash out amount must be between GH₵ 10 and GH₵ 1,000.");
+            }
+            if (!phone) return alert("Please enter your mobile money number (e.g. 024XXXXXXX).");
+
+            const btn = document.getElementById('withdraw-submit-btn');
+            btn.disabled = true;
+            btn.innerText = "Processing Payout...";
+
+            try {
+                const res = await fetch(apiUrl('/api/withdraw'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify({ amount, phone, network })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert("Withdrawal Failed: " + (data.error || "Could not process cash out."));
+                    btn.disabled = false;
+                    btn.innerText = "Confirm Cash Out";
+                    return;
+                }
+
+                state.balance = data.balance;
+                updateUI();
+                closeWithdrawModal();
+                alert(`✅ ${data.message || 'Cash out request submitted.'}`);
+                fetchHistory();
+            } catch {
+                alert("Withdrawal connection failure.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Cash Out";
+            }
+        }
+
+        // ---------- Recent Activity ----------
+        
+        // ---------- THEME TOGGLE (LIGHT / DARK) ----------
+        let currentTheme = localStorage.getItem('kb_theme') || 'dark';
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem('kb_theme', theme);
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                const btn = document.getElementById('theme-btn');
+                if (btn) btn.innerHTML = '🌙 Dark';
+            } else {
+                document.body.classList.remove('light-theme');
+                const btn = document.getElementById('theme-btn');
+                if (btn) btn.innerHTML = '☀️ Light';
+            }
+            const profThemeSelect = document.getElementById('prof-theme');
+            if (profThemeSelect) profThemeSelect.value = theme;
+        }
+
+        function toggleTheme() {
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        }
+
+        function setTheme(t) {
+            applyTheme(t);
+        }
+
+        // Apply immediately on parse
+        applyTheme(currentTheme);
+
+        // ---------- FINANCIAL BALANCE STATEMENT & HISTORY ----------
+        let allFinancialTransactions = [];
+        let activeTransactionFilter = 'all';
+
+        async function fetchFullHistory() {
+            if (!state.token) return;
+            try {
+                const res = await fetch(apiUrl('/api/history'), {
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                const data = await res.json();
+                if (!data.success) return;
+
+                // Update Summary Cards
+                if (data.summary) {
+                    const s = data.summary;
+                    const depEl = document.getElementById('bal-summary-deposits');
+                    if (depEl) depEl.innerText = formatGHS(s.totalDeposits);
+                    const withEl = document.getElementById('bal-summary-withdrawals');
+                    if (withEl) withEl.innerText = formatGHS(s.totalWithdrawals);
+                    const wonEl = document.getElementById('bal-summary-won');
+                    if (wonEl) wonEl.innerText = formatGHS(s.totalWon);
+                    const stakeEl = document.getElementById('bal-summary-staked');
+                    if (stakeEl) stakeEl.innerText = formatGHS(s.totalStaked);
+                    const netEl = document.getElementById('bal-summary-net');
+                    if (netEl) {
+                        netEl.innerText = (s.netProfit >= 0 ? '+' : '') + formatGHS(s.netProfit);
+                        netEl.className = 'stat-val ' + (s.netProfit >= 0 ? 'positive' : 'negative');
+                    }
+                }
+
+                // Compile all transactions into a unified list
+                allFinancialTransactions = [];
+                if (data.deposits) {
+                    data.deposits.forEach(d => {
+                        allFinancialTransactions.push({
+                            id: 'dep_' + d.id,
+                            category: 'deposits',
+                            date: d.created_at,
+                            type: 'Deposit via Paystack',
+                            desc: d.reference || 'Direct MomO/Card Deposit',
+                            amount: d.amount,
+                            status: d.status,
+                            isPositive: true
+                        });
+                    });
+                }
+                if (data.withdrawals) {
+                    data.withdrawals.forEach(w => {
+                        allFinancialTransactions.push({
+                            id: 'wth_' + w.id,
+                            category: 'withdrawals',
+                            date: w.created_at,
+                            type: 'Mobile Money Cash Out',
+                            desc: `${w.network || 'MOMO'} - ${w.phone || 'Phone'}`,
+                            amount: w.amount,
+                            status: w.status,
+                            isPositive: false
+                        });
+                    });
+                }
+                if (data.bets) {
+                    data.bets.forEach(b => {
+                        const isWin = b.payout > 0;
+                        allFinancialTransactions.push({
+                            id: 'bet_' + b.id,
+                            category: isWin ? 'wins' : 'losses',
+                            date: b.created_at,
+                            type: b.league === 'Casino' ? `Casino (${b.home})` : `Sports (${b.league})`,
+                            desc: `${b.home} vs ${b.away} (${b.choice}) @ ${Number(b.odds).toFixed(2)}`,
+                            amount: isWin ? b.payout : b.stake,
+                            status: isWin ? 'WIN' : 'LOSS',
+                            isPositive: isWin
+                        });
+                    });
+                }
+
+                // Sort newest first
+                allFinancialTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                renderFinancialTable();
+                renderHistory(data);
+            } catch (err) {
+                console.error("fetchFullHistory error:", err);
+            }
+        }
+
+        function filterTransactions(cat) {
+            activeTransactionFilter = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('f-' + cat);
+            if (btn) btn.classList.add('active');
+            renderFinancialTable();
+        }
+
+        function renderFinancialTable() {
+            const tbody = document.getElementById('financial-table-body');
+            if (!tbody) return;
+
+            let filtered = allFinancialTransactions;
+            if (activeTransactionFilter !== 'all') {
+                filtered = allFinancialTransactions.filter(t => t.category === activeTransactionFilter);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-sub);">No transactions found in this category.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtered.forEach(t => {
+                let badgeCls = 'info';
+                if (t.status === 'SUCCESS' || t.status === 'WIN') badgeCls = 'success';
+                else if (t.status === 'FAILED' || t.status === 'LOSS' || t.status === 'CRASH') badgeCls = 'loss';
+                else if (t.status === 'PENDING') badgeCls = 'pending';
+
+                const amountText = (t.isPositive ? '+' : '-') + formatGHS(t.amount);
+                const amountColor = t.isPositive ? 'var(--brand-green)' : (t.category === 'withdrawals' ? 'var(--text-main)' : 'var(--brand-red)');
+
+                const dateStr = t.date ? new Date(t.date).toLocaleString() : '--';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color:var(--text-sub); font-size:12px;">${dateStr}</td>
+                        <td><strong>${t.type}</strong></td>
+                        <td style="color:var(--text-sub);">${t.desc}</td>
+                        <td style="font-weight:800; color:${amountColor};">${amountText}</td>
+                        <td><span class="badge-pill ${badgeCls}">${t.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ---------- PROFILE & DATABASE SETTINGS ----------
+        function updateProfileUI() {
+            const form = document.getElementById('profile-form');
+            const logoutMsg = document.getElementById('profile-logged-out-msg');
+            if (!state.user || !state.token) {
+                if (form) form.style.display = 'none';
+                if (logoutMsg) logoutMsg.style.display = 'block';
+                return;
+            }
+
+            if (form) form.style.display = 'block';
+            if (logoutMsg) logoutMsg.style.display = 'none';
+
+            const u = state.user;
+            const emailInput = document.getElementById('prof-email');
+            if (emailInput) emailInput.value = u.email || '';
+
+            const userInp = document.getElementById('prof-username');
+            if (userInp) userInp.value = u.username || '';
+
+            const nameInp = document.getElementById('prof-fullname');
+            if (nameInp) nameInp.value = u.full_name || '';
+
+            const phoneInp = document.getElementById('prof-phone');
+            if (phoneInp) phoneInp.value = u.phone || '';
+
+            const currSelect = document.getElementById('prof-currency');
+            if (currSelect) currSelect.value = u.currency || 'GHS';
+
+            const themeSelect = document.getElementById('prof-theme');
+            if (themeSelect) themeSelect.value = u.theme || currentTheme;
+
+            // Sidebar Details
+            const dName = document.getElementById('prof-display-name');
+            if (dName) dName.innerText = u.full_name || u.username || u.email.split('@')[0];
+
+            const dEmail = document.getElementById('prof-display-email');
+            if (dEmail) dEmail.innerText = u.email;
+
+            const dRole = document.getElementById('prof-meta-role');
+            if (dRole) dRole.innerText = u.is_dev ? '🛠️ Verified Developer Account' : 'Standard Player';
+
+            const dInit = document.getElementById('prof-meta-initial');
+            if (dInit) dInit.innerText = formatGHS(u.initial_balance || 25);
+
+            const dCreated = document.getElementById('prof-meta-created');
+            if (dCreated && u.created_at) dCreated.innerText = new Date(u.created_at).toLocaleDateString();
+
+            if (u.theme && u.theme !== currentTheme) {
+                applyTheme(u.theme);
+            }
+        }
+
+        async function saveProfile(e) {
+            e.preventDefault();
+            if (!state.token) return;
+
+            const btn = document.getElementById('prof-save-btn');
+            const status = document.getElementById('prof-save-status');
+            btn.disabled = true;
+            btn.innerText = "Saving to Database...";
+            if (status) status.innerText = "";
+
+            const payload = {
+                full_name: document.getElementById('prof-fullname').value,
+                username: document.getElementById('prof-username').value,
+                phone: document.getElementById('prof-phone').value,
+                currency: document.getElementById('prof-currency').value,
+                theme: document.getElementById('prof-theme').value
+            };
+
+            const currPass = document.getElementById('prof-curr-pass').value;
+            const newPass = document.getElementById('prof-new-pass').value;
+            if (newPass) {
+                payload.current_password = currPass;
+                payload.new_password = newPass;
+            }
+
+            try {
+                const res = await fetch(apiUrl('/api/user/profile'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${state.token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert("Profile Save Error: " + (data.error || "Could not save profile"));
+                    return;
+                }
+
+                state.user = data.user;
+                localStorage.setItem('kb_user', JSON.stringify(data.user));
+                applyTheme(data.user.theme || payload.theme);
+                updateProfileUI();
+                updateAuthUI();
+
+                // Clear password fields
+                document.getElementById('prof-curr-pass').value = '';
+                document.getElementById('prof-new-pass').value = '';
+
+                if (status) {
+                    status.innerText = "✓ Changes saved to database!";
+                    setTimeout(() => { if (status) status.innerText = ""; }, 4000);
+                }
+            } catch (err) {
+                alert("Network error: Could not reach profile endpoint.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Save Profile Changes";
+            }
+        }
+
+        async function fetchHistory() {
+            if (!state.token) return;
+            try {
+                const res = await fetch(apiUrl('/api/history'), {
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                const data = await res.json();
+                if (data.success) { renderHistory(data); fetchFullHistory(); }
+            } catch {}
+        }
+
+        function renderHistory(data) {
+            const feed = document.getElementById('history-feed');
+            if (!feed) return;
+
+            let items = [];
+            if (data.bets) {
+                data.bets.forEach(b => {
+                    items.push({
+                        title: `${b.home} vs ${b.away}`,
+                        sub: `${b.league} • ${b.choice.toUpperCase()} @ ${b.odds.toFixed(2)}`,
+                        amount: b.payout > 0 ? b.payout : b.stake,
+                        isWin: b.payout > 0,
+                        date: b.created_at
+                    });
+                });
+            }
+            if (data.withdrawals) {
+                data.withdrawals.forEach(w => {
+                    items.push({
+                        title: `Cash Out to ${w.network} (${w.phone})`,
+                        sub: `Status: ${w.status}`,
+                        amount: w.amount,
+                        isWin: false,
+                        isWithdraw: true,
+                        date: w.created_at
+                    });
+                });
+            }
+            if (data.deposits) {
+                data.deposits.forEach(d => {
+                    items.push({
+                        title: `Deposit via Paystack`,
+                        sub: `Status: ${d.status}`,
+                        amount: d.amount,
+                        isWin: true,
+                        isDeposit: true,
+                        date: d.created_at
+                    });
+                });
+            }
+
+            if (items.length === 0) {
+                feed.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">No bets or transactions yet.</div>';
+                return;
+            }
+
+            feed.innerHTML = '';
+            items.slice(0, 15).forEach(item => {
+                let tag = item.isWin ? `+${formatGHS(item.amount)}` : `-${formatGHS(item.amount)}`;
+                let color = item.isWin ? 'var(--brand-green)' : 'rgba(255,255,255,0.4)';
+                let cardCls = item.isWin ? 'win' : 'loss';
+                if (item.isWithdraw) {
+                    tag = `-${formatGHS(item.amount)}`;
+                    color = 'var(--brand-red)';
+                    cardCls = 'loss';
+                }
+                feed.innerHTML += `
+                    <div class="history-card ${cardCls}">
+                        <div style="display:flex; justify-content:space-between; font-weight:800;">
+                            <span>${item.title}</span>
+                            <span style="color: ${color}">${tag}</span>
+                        </div>
+                        <div style="color: var(--text-sub); margin-top: 4px; font-size: 11px;">${item.sub}</div>
+                    </div>`;
+            });
+        }
+
+        // ---------- Developer Tools ----------
+        function openDevModal() {
+            document.getElementById('dev-modal').classList.add('active');
+        }
+        function closeDevModal() {
+            document.getElementById('dev-modal').classList.remove('active');
+        }
+
+        async function submitDevUnlock() {
+            const pin = document.getElementById('dev-pin-input').value;
+            try {
+                const res = await fetch(apiUrl('/api/dev/unlock'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+                const d = await res.json();
+                if (!d.success) return alert(d.error || "Wrong PIN.");
+                devToken = d.devToken;
+                document.getElementById('dev-pin-group').style.display = 'none';
+                document.getElementById('dev-controls-group').style.display = 'block';
+                document.getElementById('dev-toggle-chk').checked = d.enabled;
+            } catch {
+                alert("Dev server unlock failed.");
+            }
+        }
+
+        async function devToggleMode(chk) {
+            if (!devToken) return;
+            const res = await fetch(apiUrl('/api/dev/toggle'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${devToken}` },
+                body: JSON.stringify({ on: chk.checked })
+            });
+            const d = await res.json();
+            alert(`Developer mode is now ${d.enabled ? 'ACTIVE' : 'INACTIVE'}`);
+        }
+
+        async function devQuickLogin() {
+            if (!devToken) return;
+            const res = await fetch(apiUrl('/api/dev/login'), {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${devToken}` }
+            });
+            const d = await res.json();
+            if (!d.success) return alert(d.error || "Dev login failed. Ensure dev mode is enabled!");
+            state.token = d.token;
+            state.user = d.user;
+            state.balance = d.user.balance;
+            state.initialBalance = d.user.initial_balance;
+            localStorage.setItem('kb_token', d.token);
+            localStorage.setItem('kb_user', JSON.stringify(d.user));
+            closeDevModal();
+            updateAuthUI();
+            updateUI();
+            fetchHistory();
+            fetchFixtures(currentLeagueKey);
+            alert("Logged in as Dev Account with test balance!");
+        }
+
+        async function devTopUp() {
+            if (!devToken) return;
+            const res = await fetch(apiUrl('/api/dev/topup'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${devToken}` },
+                body: JSON.stringify({ amount: 1000 })
+            });
+            const d = await res.json();
+            if (!d.success) return alert(d.error);
+            state.balance = d.balance;
+            updateUI();
+            alert("Added GH₵ 1,000 test credits!");
+        }
+
+        async function devResetAccount() {
+            if (!devToken || !confirm("Reset dev account balance and history?")) return;
+            const res = await fetch(apiUrl('/api/dev/reset'), {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${devToken}` }
+            });
+            const d = await res.json();
+            if (!d.success) return alert(d.error);
+            state.balance = d.balance;
+            updateUI();
+            fetchHistory();
+            alert("Dev account reset to starting state!");
+        }
+
+        // ---------- App Initialization ----------
+        async function initApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const reference = urlParams.get('reference');
+
+            if (state.token) {
+                try {
+                    const res = await fetch(apiUrl('/api/auth/me'), {
+                        headers: { 'Authorization': `Bearer ${state.token}` }
+                    });
+                    const d = await res.json();
+                    if (d.success && d.user) {
+                        state.user = d.user;
+                        state.balance = d.user.balance;
+                        state.initialBalance = d.user.initial_balance;
+                        localStorage.setItem('kb_user', JSON.stringify(d.user));
+                    } else {
+                        logout();
+                    }
+                } catch {}
+            }
+
+            if (reference) {
+                if (state.token) {
+                    try {
+                        const vRes = await fetch(apiUrl('/api/payments/verify'), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${state.token}`
+                            },
+                            body: JSON.stringify({ reference })
+                        });
+                        const vData = await vRes.json();
+                        if (vData.success) {
+                            state.balance = vData.balance;
+                            alert(vData.message || "Payment credited successfully!");
+                        } else {
+                            alert("Payment notice: " + (vData.error || "Pending confirmation"));
+                        }
+                    } catch {
+                        alert("Deposit verification pending from gateway.");
+                    }
+                } else {
+                    alert(`Payment completed (Ref: ${reference}). Log in to finish crediting.`);
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            updateAuthUI();
+            updateUI();
+            selectLeague('epl');
+            if (state.token) fetchHistory();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
