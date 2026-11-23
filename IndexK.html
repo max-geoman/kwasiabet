@@ -43,6 +43,160 @@
             gap: 4px;
         }
 
+        
+        /* Mobile Responsive & Next-Week Preview Styles */
+        .preview-card {
+            opacity: 0.82;
+            border-style: dashed !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            position: relative;
+        }
+        .preview-lock-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 204, 0, 0.1);
+            color: #ffcc00;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 204, 0, 0.2);
+        }
+        .odds-cell.disabled-odds {
+            cursor: not-allowed !important;
+            opacity: 0.65;
+            background: rgba(255, 255, 255, 0.03) !important;
+            transform: none !important;
+        }
+        .matchweek-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 24px 0 14px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .matchweek-title {
+            font-size: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Responsive Breakpoints for Mobile & Tablet */
+        @media (max-width: 1080px) {
+            .layout-grid {
+                grid-template-columns: 1fr 340px !important;
+            }
+            .layout-grid aside:first-child {
+                display: none; /* Hide desktop standings on medium screens */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .logo-text { font-size: 1.25rem; }
+            .auth-bar {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .auth-btn, .theme-toggle-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .nav-links-inner {
+                padding: 0 16px;
+                gap: 14px;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+            .nav-link {
+                padding: 10px 0;
+                font-size: 13px;
+            }
+            .layout-grid, .layout-grid.two-col {
+                grid-template-columns: 1fr !important;
+                padding: 0 16px;
+                margin: 16px auto;
+                gap: 16px;
+            }
+            .layout-grid aside {
+                order: -1; /* Display wallet & betslip easily accessible on mobile */
+            }
+            #view-sports .layout-grid aside:first-child {
+                display: block; /* Show standings table under main on mobile */
+                order: 3;
+            }
+            .fixture-teams {
+                font-size: 14px;
+                gap: 6px;
+            }
+            .team-box {
+                font-size: 13px;
+                gap: 6px;
+            }
+            .team-logo-img {
+                width: 22px;
+                height: 22px;
+            }
+            .odds-row {
+                gap: 6px;
+            }
+            .odds-cell {
+                padding: 10px 6px;
+            }
+            .odds-val {
+                font-size: 14px;
+            }
+            .odds-label {
+                font-size: 10px;
+            }
+            .wallet-amount {
+                font-size: 2.1rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 14px;
+            }
+            .stat-val {
+                font-size: 18px;
+            }
+            .multiplier-display {
+                font-size: 3.8rem;
+            }
+            .slot-reel {
+                width: 75px;
+                height: 75px;
+                font-size: 2.5rem;
+            }
+            .crash-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .bet-input {
+                width: 100%;
+            }
+            .action-btn {
+                width: 100%;
+                padding: 14px;
+            }
+            .modal-box {
+                padding: 20px;
+                border-radius: var(--radius-lg);
+            }
+        }
+
         /* Pure Clean Elevated Shadows */
             --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
             --hover-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
@@ -1229,7 +1383,7 @@
             user: JSON.parse(localStorage.getItem('kb_user') || 'null'),
             initialBalance: 25.00,
             balance: 25.00,
-            season: { matchday: 1, standings: {}, currentFixtures: [] },
+            season: { matchday: 1, standings: {}, currentFixtures: [], currentWeek: [], nextWeek: [] },
             activeSelection: null,
             history: []
         };
@@ -1266,28 +1420,31 @@
 
         async function fetchFixtures(leagueKey) {
             const board = document.getElementById('fixtures-board');
-            if (board) board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">Loading fixtures...</div>';
+            if (board) board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">Loading live matchweek fixtures...</div>';
             
             try {
                 const headers = {};
                 if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
                 const res = await fetch(apiUrl(`/api/fixtures/${leagueKey}`), { headers });
                 const data = await res.json();
-                if (data.success && data.fixtures) {
-                    state.season.currentFixtures = data.fixtures;
+                if (data.success) {
+                    state.season.currentWeek = data.currentWeek || data.fixtures || [];
+                    state.season.nextWeek = data.nextWeek || [];
+                    state.season.currentFixtures = state.season.currentWeek;
+                    state.season.isLiveOdds = !!data.live;
                     renderFixtures();
                 } else {
                     board.innerHTML = `<div style="color:var(--brand-red); text-align:center; padding:30px;">${data.error || 'Failed to load fixtures.'}</div>`;
                 }
             } catch (err) {
-                board.innerHTML = '<div style="color:var(--brand-red); text-align:center; padding:30px;">Could not connect to game server.</div>';
+                board.innerHTML = '<div style="color:var(--brand-red); text-align:center; padding:30px;">Could not connect to betting server.</div>';
             }
         }
 
         
         // Fast CDN Logos for major clubs (fallback to stylized shield avatar)
         const TEAM_LOGOS = {
-            // Premier League (EPL)
+            // Premier League & Championship / UK
             "Man City": "https://crests.football-data.org/65.png",
             "Manchester City": "https://crests.football-data.org/65.png",
             "Arsenal": "https://crests.football-data.org/57.png",
@@ -1319,11 +1476,28 @@
             "Southampton": "https://crests.football-data.org/340.png",
             "Ipswich": "https://crests.football-data.org/349.png",
             "Ipswich Town": "https://crests.football-data.org/349.png",
+            "Hull City": "https://crests.football-data.org/322.png",
+            "Hull": "https://crests.football-data.org/322.png",
+            "Leeds": "https://crests.football-data.org/341.png",
+            "Leeds United": "https://crests.football-data.org/341.png",
+            "Sunderland": "https://crests.football-data.org/71.png",
+            "Coventry": "https://crests.football-data.org/1076.png",
+            "Coventry City": "https://crests.football-data.org/1076.png",
+            "Sheffield Utd": "https://crests.football-data.org/356.png",
+            "Sheffield United": "https://crests.football-data.org/356.png",
+            "Burnley": "https://crests.football-data.org/328.png",
+            "Luton": "https://crests.football-data.org/389.png",
+            "Luton Town": "https://crests.football-data.org/389.png",
+            "Middlesbrough": "https://crests.football-data.org/68.png",
+            "Norwich": "https://crests.football-data.org/68.png",
+            "West Brom": "https://crests.football-data.org/74.png",
+            "Watford": "https://crests.football-data.org/346.png",
 
             // La Liga
             "Real Madrid": "https://crests.football-data.org/86.png",
             "Barcelona": "https://crests.football-data.org/81.png",
             "Atletico Madrid": "https://crests.football-data.org/78.png",
+            "Atlético Madrid": "https://crests.football-data.org/78.png",
             "Athletic Bilbao": "https://crests.football-data.org/77.png",
             "Real Sociedad": "https://crests.football-data.org/92.png",
             "Girona": "https://crests.football-data.org/298.png",
@@ -1333,6 +1507,7 @@
             "Sevilla": "https://crests.football-data.org/559.png",
             "Valencia": "https://crests.football-data.org/95.png",
             "Osasuna": "https://crests.football-data.org/79.png",
+            "CA Osasuna": "https://crests.football-data.org/79.png",
             "Getafe": "https://crests.football-data.org/82.png",
             "Celta Vigo": "https://crests.football-data.org/558.png",
             "Rayo Vallecano": "https://crests.football-data.org/87.png",
@@ -1340,13 +1515,19 @@
             "Las Palmas": "https://crests.football-data.org/275.png",
             "Espanyol": "https://crests.football-data.org/80.png",
             "Alaves": "https://crests.football-data.org/263.png",
+            "Alavés": "https://crests.football-data.org/263.png",
             "Leganes": "https://crests.football-data.org/745.png",
             "Valladolid": "https://crests.football-data.org/250.png",
+            "Levante": "https://crests.football-data.org/88.png",
+            "Málaga": "https://crests.football-data.org/84.png",
+            "Elche CF": "https://crests.football-data.org/285.png",
+            "Deportivo La Coruña": "https://crests.football-data.org/560.png",
+            "Real Racing Club de Santander": "https://crests.football-data.org/277.png",
 
-            // UEFA Champions League & Europe
+            // Europe / Champions League
             "Bayern Munich": "https://crests.football-data.org/5.png",
-            "Paris Saint-Germain": "https://crests.football-data.org/524.png",
             "PSG": "https://crests.football-data.org/524.png",
+            "Paris Saint-Germain": "https://crests.football-data.org/524.png",
             "Inter Milan": "https://crests.football-data.org/108.png",
             "Bayer Leverkusen": "https://crests.football-data.org/4.png",
             "Borussia Dortmund": "https://crests.football-data.org/7.png",
@@ -1368,7 +1549,7 @@
             "Al Taawoun": "https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Al-Taawoun_FC_logo.svg/200px-Al-Taawoun_FC_logo.svg.png",
             "Al Fateh": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/Al-Fateh_SC_logo.svg/200px-Al-Fateh_SC_logo.svg.png",
 
-            // Ghana Premier League (GPL)
+            // Ghana Premier League
             "Asante Kotoko": "https://upload.wikimedia.org/wikipedia/en/thumb/2/26/Asante_Kotoko_SC_logo.svg/200px-Asante_Kotoko_SC_logo.svg.png",
             "Hearts of Oak": "https://upload.wikimedia.org/wikipedia/en/thumb/0/07/Accra_Hearts_of_Oak_SC_logo.svg/200px-Accra_Hearts_of_Oak_SC_logo.svg.png",
             "Medeama SC": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Medeama_SC_logo.svg/200px-Medeama_SC_logo.svg.png",
@@ -1392,27 +1573,42 @@
         }
 
         function renderFixtures() {
-
             const board = document.getElementById('fixtures-board'); 
             if (!board) return;
             board.innerHTML = '';
 
-            if (!state.season.currentFixtures || state.season.currentFixtures.length === 0) {
-                board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">No fixtures available right now.</div>';
+            const current = state.season.currentWeek || [];
+            const next = state.season.nextWeek || [];
+
+            if (current.length === 0 && next.length === 0) {
+                board.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding:30px;">No fixtures available for this league right now.</div>';
                 return;
             }
 
-            state.season.currentFixtures.forEach(fix => {
+            // --- SECTION 1: CURRENT MATCHWEEK (BETTING OPEN) ---
+            let htmlBuffer = `
+                <div class="matchweek-header">
+                    <div class="matchweek-title">
+                        <span>🔥 Current Matchweek</span>
+                        <span class="badge-pill success">BETTING ACTIVE</span>
+                        ${state.season.isLiveOdds ? '<span class="live-tag-badge">🔴 THE ODDS API</span>' : ''}
+                    </div>
+                    <span style="font-size:12px; color:var(--text-sub);">Only current week matches accept stakes</span>
+                </div>
+            `;
+
+            current.forEach(fix => {
                 let sel = state.activeSelection;
                 let isH = sel && sel.fixtureId === fix.id && sel.choice === 'home';
                 let isD = sel && sel.fixtureId === fix.id && sel.choice === 'draw';
                 let isA = sel && sel.fixtureId === fix.id && sel.choice === 'away';
+                const timeStr = fix.commence_time ? new Date(fix.commence_time).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : `Matchday ${state.season.matchday}`;
                 
-                board.innerHTML += `
+                htmlBuffer += `
                     <div class="fixture-card hover-lift">
                         <div class="fixture-meta">
-                            <span>Matchday ${state.season.matchday}</span>
-                            ${fix.commence_time ? '<span class="live-tag-badge">🔴 REAL ODDS API</span>' : '<span style="color: var(--brand-red);">Live Market</span>'}
+                            <span>📅 ${timeStr}</span>
+                            <span style="color: var(--brand-green); font-weight:700;">🟢 Open for Betting</span>
                         </div>
                         <div class="fixture-teams">
                             <div class="team-box">
@@ -1428,19 +1624,74 @@
                         <div class="odds-row">
                             <div class="odds-cell ${isH ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'home', ${fix.odds.home})">
                                 <span class="odds-label">1 (Home)</span>
-                                <span class="odds-val">${fix.odds.home.toFixed(2)}</span>
+                                <span class="odds-val">${Number(fix.odds.home).toFixed(2)}</span>
                             </div>
                             <div class="odds-cell ${isD ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'draw', ${fix.odds.draw})">
                                 <span class="odds-label">X (Draw)</span>
-                                <span class="odds-val">${fix.odds.draw.toFixed(2)}</span>
+                                <span class="odds-val">${Number(fix.odds.draw).toFixed(2)}</span>
                             </div>
                             <div class="odds-cell ${isA ? 'selected' : ''}" onclick="selectOdds('${fix.id}', 'away', ${fix.odds.away})">
                                 <span class="odds-label">2 (Away)</span>
-                                <span class="odds-val">${fix.odds.away.toFixed(2)}</span>
+                                <span class="odds-val">${Number(fix.odds.away).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>`;
             });
+
+            // --- SECTION 2: NEXT MATCHWEEK (ODDS PREVIEW ONLY, BETTING LOCKED) ---
+            if (next.length > 0) {
+                htmlBuffer += `
+                    <div class="matchweek-header" style="margin-top: 36px;">
+                        <div class="matchweek-title">
+                            <span>⏳ Next Matchweek Preview</span>
+                            <span class="badge-pill pending">LOCKED PREVIEW</span>
+                        </div>
+                        <span style="font-size:12px; color:var(--text-sub);">Preview odds • Betting opens next week</span>
+                    </div>
+                `;
+
+                next.forEach(fix => {
+                    const timeStr = fix.commence_time ? new Date(fix.commence_time).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : `Upcoming Match`;
+                    htmlBuffer += `
+                        <div class="fixture-card preview-card">
+                            <div class="preview-lock-banner">
+                                <span>🔒 Upcoming Round Preview</span>
+                                <span>Opens once current matchweek ends</span>
+                            </div>
+                            <div class="fixture-meta">
+                                <span>📅 ${timeStr}</span>
+                                <span style="color: #ffcc00; font-weight:700;">Odds Preview Only</span>
+                            </div>
+                            <div class="fixture-teams">
+                                <div class="team-box">
+                                    <img src="${getTeamLogo(fix.home)}" alt="${fix.home}" class="team-logo-img" onerror="this.src=getTeamLogo('')" />
+                                    <span>${fix.home}</span>
+                                </div>
+                                <span style="color: rgba(255,255,255,0.4); font-size: 12px; font-weight:800; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:6px;">VS</span>
+                                <div class="team-box" style="justify-content: flex-end;">
+                                    <span>${fix.away}</span>
+                                    <img src="${getTeamLogo(fix.away)}" alt="${fix.away}" class="team-logo-img" onerror="this.src=getTeamLogo('')" />
+                                </div>
+                            </div>
+                            <div class="odds-row">
+                                <div class="odds-cell disabled-odds" title="Betting opens next matchweek">
+                                    <span class="odds-label">1 (Home)</span>
+                                    <span class="odds-val">${Number(fix.odds.home).toFixed(2)}</span>
+                                </div>
+                                <div class="odds-cell disabled-odds" title="Betting opens next matchweek">
+                                    <span class="odds-label">X (Draw)</span>
+                                    <span class="odds-val">${Number(fix.odds.draw).toFixed(2)}</span>
+                                </div>
+                                <div class="odds-cell disabled-odds" title="Betting opens next matchweek">
+                                    <span class="odds-label">2 (Away)</span>
+                                    <span class="odds-val">${Number(fix.odds.away).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            board.innerHTML = htmlBuffer;
         }
 
         function selectOdds(fixtureId, choice, oddsVal) {

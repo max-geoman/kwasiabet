@@ -344,19 +344,21 @@ async function fetchRealOdds(key, uid) {
 
   const now = Date.now();
   if (cachedOdds[key] && cacheExpiry[key] && now < cacheExpiry[key]) {
-    // Re-register cached fixtures into active memory for bets
-    cachedOdds[key].forEach(f => {
-      fixtures.set(f.id, {
-        uid,
-        league: key,
-        home: f.home,
-        away: f.away,
-        odds: f.odds,
-        p: f.p,
-        commence_time: f.commence_time,
-        exp: Date.now() + 15 * 60e3
+    // Re-register ONLY current week fixtures into active memory for bets
+    if (cachedOdds[key].currentWeek) {
+      cachedOdds[key].currentWeek.forEach(f => {
+        fixtures.set(f.id, {
+          uid,
+          league: key,
+          home: f.home,
+          away: f.away,
+          odds: f.odds,
+          p: f.p,
+          commence_time: f.commence_time,
+          exp: Date.now() + 15 * 60e3
+        });
       });
-    });
+    }
     return cachedOdds[key];
   }
 
@@ -367,7 +369,25 @@ async function fetchRealOdds(key, uid) {
 
     if (!Array.isArray(data) || data.length === 0) return null;
 
-    const list = data.slice(0, 8).map(match => {
+    // Sort matches chronologically by commence_time
+    const sorted = [...data].sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+
+    // Group matches into Match Weeks based on date clustering (matches within 4 days of the first match belong to the current round)
+    const firstMatchTime = new Date(sorted[0].commence_time).getTime();
+    const currentWeekRaw = [];
+    const nextWeekRaw = [];
+
+    sorted.forEach(m => {
+      const matchTime = new Date(m.commence_time).getTime();
+      // If within 4 days of the earliest match in the slate, it belongs to Current Matchweek
+      if (matchTime - firstMatchTime <= 4.5 * 24 * 60 * 60 * 1000) {
+        currentWeekRaw.push(m);
+      } else {
+        nextWeekRaw.push(m);
+      }
+    });
+
+    const formatMatch = (match, allowBets) => {
       const bookmaker = match.bookmakers && match.bookmakers[0];
       const market = bookmaker && bookmaker.markets && bookmaker.markets.find(m => m.key === 'h2h');
       const outcomes = (market && market.outcomes) || [];
@@ -377,22 +397,23 @@ async function fetchRealOdds(key, uid) {
       const dOdds = outcomes.find(o => o.name === 'Draw')?.price || 3.10;
 
       const odds = { home: r2(hOdds), draw: r2(dOdds), away: r2(aOdds) };
-      // Probability estimation for server resolution
       const invH = 1 / odds.home, invD = 1 / odds.draw, invA = 1 / odds.away;
       const totalInv = invH + invD + invA;
       const p = { home: invH / totalInv, draw: invD / totalInv, away: invA / totalInv };
 
       const id = match.id || crypto.randomUUID();
-      fixtures.set(id, {
-        uid,
-        league: key,
-        home: match.home_team,
-        away: match.away_team,
-        odds,
-        p,
-        commence_time: match.commence_time,
-        exp: Date.now() + 15 * 60e3
-      });
+      if (allowBets) {
+        fixtures.set(id, {
+          uid,
+          league: key,
+          home: match.home_team,
+          away: match.away_team,
+          odds,
+          p,
+          commence_time: match.commence_time,
+          exp: Date.now() + 15 * 60e3
+        });
+      }
 
       return {
         id,
@@ -400,13 +421,18 @@ async function fetchRealOdds(key, uid) {
         away: match.away_team,
         odds,
         p,
-        commence_time: match.commence_time
+        commence_time: match.commence_time,
+        canBet: allowBets
       };
-    });
+    };
 
-    cachedOdds[key] = list;
-    cacheExpiry[key] = now + 10 * 60 * 1000; // cache for 10 minutes to preserve API quota
-    return list;
+    const currentWeek = currentWeekRaw.slice(0, 10).map(m => formatMatch(m, true));
+    const nextWeek = nextWeekRaw.slice(0, 10).map(m => formatMatch(m, false));
+
+    const result = { currentWeek, nextWeek };
+    cachedOdds[key] = result;
+    cacheExpiry[key] = now + 10 * 60 * 1000;
+    return result;
   } catch (err) {
     console.warn(`[WARN] Failed to fetch real odds for ${key}:`, err.message);
     return null;
@@ -420,14 +446,26 @@ app.get('/api/fixtures/:league', optionalAuth, async (req, res) => {
   if (!LEAGUES[leagueKey]) return fail(res, 404, 'Unknown league.');
   const uid = req.user ? req.user.id : 0;
 
-  // Attempt to fetch real live odds from The Odds API
-  const realFixtures = await fetchRealOdds(leagueKey, uid);
-  if (realFixtures && realFixtures.length > 0) {
-    return res.json({ success: true, live: true, fixtures: realFixtures });
+  const realSchedule = await fetchRealOdds(leagueKey, uid);
+  if (realSchedule && realSchedule.currentWeek && realSchedule.currentWeek.length > 0) {
+    return res.json({
+      success: true,
+      live: true,
+      currentWeek: realSchedule.currentWeek,
+      nextWeek: realSchedule.nextWeek,
+      fixtures: realSchedule.currentWeek // backward-compatibility
+    });
   }
 
-  // Graceful fallback to simulation engine (e.g. for GPL or when API quota is exhausted)
-  res.json({ success: true, live: false, fixtures: buildFixtures(leagueKey, uid) });
+  // Fallback simulation engine
+  const simulated = buildFixtures(leagueKey, uid);
+  res.json({
+    success: true,
+    live: false,
+    currentWeek: simulated.slice(0, 4),
+    nextWeek: simulated.slice(4).map(f => ({ ...f, canBet: false })),
+    fixtures: simulated
+  });
 });
 const checkStake = v => { const s = r2(+v); return s >= 1 && s <= MAX_STAKE ? s : 0; };
 
