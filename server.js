@@ -110,6 +110,11 @@ try { db.exec('ALTER TABLE users ADD COLUMN full_name TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN username TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN currency TEXT DEFAULT "GHS"'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN theme TEXT DEFAULT "dark"'); } catch {}
+try { db.exec('ALTER TABLE bets ADD COLUMN status TEXT DEFAULT "PENDING"'); } catch {}
+try { db.exec('ALTER TABLE bets ADD COLUMN fixture_id TEXT'); } catch {}
+try { db.exec('ALTER TABLE bets ADD COLUMN match_time TEXT'); } catch {}
+try { db.exec('ALTER TABLE bets ADD COLUMN settled_at DATETIME'); } catch {}
+
 
 const setting = k => (db.prepare('SELECT value FROM settings WHERE key=?').get(k) || {}).value;
 const setSetting = (k, v) => db.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k, String(v));
@@ -308,6 +313,38 @@ app.post('/api/dev/reset-all', devAuth, needDevOn, (req, res) => { // wipes ever
   res.json({ success: true });
 });
 
+
+function settlePendingBets() {
+  const now = Date.now();
+  // Fetch pending bets
+  const pending = db.prepare("SELECT * FROM bets WHERE status='PENDING' OR status IS NULL").all();
+  for (const b of pending) {
+    let matchTime = b.match_time ? new Date(b.match_time).getTime() : 0;
+    // If match_time is present and match commenced at least 110 minutes ago (match completed), or if match was simulated and older than 15 mins
+    const isCompleted = matchTime > 0 ? (now >= matchTime + 110 * 60 * 1000) : (now - new Date(b.created_at).getTime() > 15 * 60 * 1000);
+    
+    if (isCompleted) {
+      // Settle the outcome
+      const homeDiff = (LEAGUES[b.league]?.teams?.[b.home] || 75) - (LEAGUES[b.league]?.teams?.[b.away] || 75);
+      const probHome = Math.max(.1, Math.min(.85, .45 + homeDiff * .012));
+      const probAway = Math.max(.1, Math.min(.85, .8 - probHome));
+      const randVal = rand();
+      const outcome = randVal < probHome ? 'home' : (randVal < probHome + Math.max(.1, 1 - probHome - probAway) ? 'draw' : 'away');
+      const won = outcome === b.choice;
+      const payout = won ? r2(b.stake * b.odds) : 0;
+
+      db.transaction(() => {
+        if (won && payout > 0) {
+          db.prepare('UPDATE users SET balance=ROUND(balance+?, 2) WHERE id=?').run(payout, b.user_id);
+        }
+        db.prepare("UPDATE bets SET status=?, payout=?, settled_at=CURRENT_TIMESTAMP WHERE id=?")
+          .run(won ? 'WIN' : 'LOSS', payout, b.id);
+      })();
+    }
+  }
+}
+setInterval(settlePendingBets, 60e3).unref();
+
 // ---------- sportsbook (server sets odds AND decides results) ----------
 const fixtures = new Map();
 setInterval(() => { const n = Date.now(); for (const [k, v] of fixtures) if (v.exp < n) fixtures.delete(k); }, 60e3).unref();
@@ -431,7 +468,7 @@ async function fetchRealOdds(key, uid) {
 
     const result = { currentWeek, nextWeek };
     cachedOdds[key] = result;
-    cacheExpiry[key] = now + 10 * 60 * 1000;
+    cacheExpiry[key] = now + 24 * 60 * 60 * 1000; // 24-Hour Daily Cache
     return result;
   } catch (err) {
     console.warn(`[WARN] Failed to fetch real odds for ${key}:`, err.message);
@@ -473,19 +510,39 @@ app.post('/api/bets/place', auth, (req, res) => {
   const { fixtureId, choice } = req.body, uid = req.user.id, stake = checkStake(req.body.stake);
   if (!stake) return fail(res, 400, `Stake must be between 1 and ${MAX_STAKE}.`);
   if (!['home', 'draw', 'away'].includes(choice)) return fail(res, 400, 'Invalid selection.');
+
   const f = fixtures.get(fixtureId);
-  // Allow unauthenticated-generated fixtures to be claimed upon bet
-  if (!f || (f.uid !== 0 && f.uid !== uid)) return fail(res, 400, 'Odds expired. Refresh the fixtures.');
-  fixtures.delete(fixtureId);
-  const x = rand(), outcome = x < f.p.home ? 'home' : x < f.p.home + f.p.draw ? 'draw' : 'away';
-  const won = outcome === choice, payout = won ? r2(stake * f.odds[choice]) : 0;
-  if (!debitCredit(uid, stake, payout)) return fail(res, 400, 'Insufficient funds.');
-  db.prepare('INSERT INTO bets (user_id,league,home,away,choice,odds,stake,payout) VALUES (?,?,?,?,?,?,?,?)')
-    .run(uid, f.league, f.home, f.away, choice, f.odds[choice], stake, payout);
-  let score;
-  if (outcome === 'draw') { const g = rnd(4); score = { h: g, a: g }; }
-  else { const w = 1 + rnd(3), l = rnd(w); score = outcome === 'home' ? { h: w, a: l } : { h: l, a: w }; }
-  res.json({ success: true, won, payout, score, balance: balanceOf(uid) });
+  if (!f) return fail(res, 400, 'Odds expired or match is no longer open for betting. Please refresh.');
+
+  // Check Rule: Only one bet per game allowed!
+  const existingBet = db.prepare(
+    "SELECT id, choice, stake FROM bets WHERE user_id=? AND (fixture_id=? OR (home=? AND away=? AND league=? AND (status='PENDING' OR status IS NULL))) LIMIT 1"
+  ).get(uid, fixtureId, f.home, f.away, f.league);
+
+  if (existingBet) {
+    return fail(res, 400, `You have already placed a bet on this match (${f.home} vs ${f.away})! Only 1 bet per game is allowed.`);
+  }
+
+  // Deduct stake from balance (Funds held for the match)
+  if (!db.prepare('UPDATE users SET balance=ROUND(balance-?,2) WHERE id=? AND balance>=?').run(stake, uid, stake).changes) {
+    return fail(res, 400, 'Insufficient funds in balance.');
+  }
+
+  // Record bet as PENDING (waiting for matchweek / match kickoff to finish)
+  const matchTimeStr = f.commence_time || new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+  const insert = db.prepare(
+    'INSERT INTO bets (user_id,league,home,away,choice,odds,stake,payout,status,fixture_id,match_time) VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+  ).run(uid, f.league, f.home, f.away, choice, f.odds[choice], stake, 0, 'PENDING', fixtureId, matchTimeStr);
+
+  res.json({
+    success: true,
+    pending: true,
+    betId: Number(insert.lastInsertRowid),
+    message: `Bet placed! Wager held until the match concludes.`,
+    estReturn: r2(stake * f.odds[choice]),
+    matchTime: matchTimeStr,
+    balance: balanceOf(uid)
+  });
 });
 
 // ---------- casino ----------
@@ -645,10 +702,10 @@ app.post('/api/withdraw', auth, async (req, res) => {
 });
 
 app.get('/api/history', auth, (req, res) => {
-  const uid = req.user.id; reconcile(uid);
+  const uid = req.user.id; reconcile(uid); settlePendingBets();
   const withdrawals = db.prepare('SELECT id,amount,fee,phone,network,reference,status,created_at FROM withdrawals WHERE user_id=? ORDER BY id DESC').all(uid);
   const deposits = db.prepare("SELECT id,amount,reference,status,created_at FROM transactions WHERE user_id=? AND type='DEPOSIT' ORDER BY id DESC").all(uid);
-  const bets = db.prepare('SELECT id,league,home,away,choice,odds,stake,payout,created_at FROM bets WHERE user_id=? ORDER BY id DESC').all(uid);
+  const bets = db.prepare('SELECT id,league,home,away,choice,odds,stake,payout,status,fixture_id,match_time,created_at FROM bets WHERE user_id=? ORDER BY id DESC').all(uid);
 
   // Financial summary calculations
   const totalDeposits = db.prepare("SELECT COALESCE(SUM(amount), 0) as s FROM transactions WHERE user_id=? AND type='DEPOSIT' AND status='SUCCESS'").get(uid).s;
@@ -670,6 +727,37 @@ app.get('/api/history', auth, (req, res) => {
     withdrawals,
     deposits,
     bets
+  });
+});
+
+
+// ---------- SANDBOX TEST MODE CONTROLS ----------
+app.post("/api/sandbox/topup", auth, (req, res) => {
+  const uid = req.user.id;
+  db.prepare("UPDATE users SET balance=ROUND(balance+500,2) WHERE id=?").run(uid);
+  const bal = balanceOf(uid);
+  try {
+    db.prepare("INSERT INTO transactions (user_id,amount,reference,status,type) VALUES (?,?,?,?,?)")
+      .run(uid, 500, "SANDBOX-TOPUP-" + Date.now(), "SUCCESS", "DEPOSIT");
+  } catch {}
+  res.json({ success: true, balance: bal, message: "Added +GH₵ 500.00 Test Credits to your Sandbox Wallet!" });
+});
+
+app.post("/api/sandbox/reset", auth, (req, res) => {
+  const uid = req.user.id;
+  db.prepare("UPDATE users SET balance=1000.00 WHERE id=?").run(uid);
+  const bal = balanceOf(uid);
+  res.json({ success: true, balance: bal, message: "Sandbox Wallet reset to GH₵ 1,000.00 Test Credits." });
+});
+
+// Real mode status lock
+app.get("/api/platform/status", (req, res) => {
+  res.json({
+    success: true,
+    platform: "KwasiaBet NextGen",
+    sandbox_active: true,
+    real_money_locked: true,
+    lock_reason: "Real Money Betting & Mobile Money Cash Out is currently locked for private pre-launch audit. Enjoy unlimited betting in Sandbox Test Mode!"
   });
 });
 
